@@ -1,13 +1,17 @@
-//package com.proxyip.select;
-//
-//import org.springframework.boot.SpringApplication;
-//import org.springframework.boot.autoconfigure.SpringBootApplication;
-//
-//@SpringBootApplication
-//public class SelectApplication {
-//
-//    public static void main(String[] args) {
-//        SpringApplication.run(SelectApplication.class, args);
-//    }
-//
-//}
+package com.proxyip.select;
+
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
+
+@SpringBootApplication
+@ConfigurationPropertiesScan
+@EnableScheduling
+public class SelectApplication {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SelectApplication.class, args);
+    }
+
+}
