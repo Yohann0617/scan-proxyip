@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import java.io.*;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -37,20 +39,20 @@ public class Main implements ApplicationRunner {
     /**
      * cf添加dns记录api
      */
-    private final String cfAddDnsRecordsApi = "curl -X POST \"https://api.cloudflare.com/client/v4/zones/%s/dns_records\" \\\n" +
-            "     -H \"Authorization: Bearer %s\" \\\n" +
-            "     -H \"Content-Type: application/json\" \\\n" +
+    private final String cfAddDnsRecordsApi = "curl -X POST \"https://api.cloudflare.com/client/v4/zones/%s/dns_records\"" +
+            "     -H \"Authorization: Bearer %s\" " +
+            "     -H \"Content-Type: application/json\" " +
             "     --data '{\"type\":\"A\",\"name\":\"%s\",\"content\":\"%s\",\"proxied\":false}'";
 
     /**
      * cf删除所有dns记录api
      */
-    private final String cfRemoveDnsRecordsApi = "curl -X GET \"https://api.cloudflare.com/client/v4/zones/%s/dns_records?type=A&name=%s\" \\\n" +
-            "     -H \"Authorization: Bearer %s\" \\\n" +
-            "     -H \"Content-Type: application/json\" | \\\n" +
-            "jq -c '.result[] | .id' | \\\n" +
-            "xargs -n 1 -I {} curl -X DELETE \"https://api.cloudflare.com/client/v4/zones/%s/dns_records/{}\" \\\n" +
-            "     -H \"Authorization: Bearer %s\" \\\n" +
+    private final String cfRemoveDnsRecordsApi = "curl -X GET \"https://api.cloudflare.com/client/v4/zones/%s/dns_records?type=A&name=%s\" " +
+            "     -H \"Authorization: Bearer %s\" " +
+            "     -H \"Content-Type: application/json\" | " +
+            "jq -c '.result[] | .id' | " +
+            "xargs -n 1 -I {} curl -X DELETE \"https://api.cloudflare.com/client/v4/zones/%s/dns_records/{}\" " +
+            "     -H \"Authorization: Bearer %s\" " +
             "     -H \"Content-Type: application/json\"";
 
     private class MyTask implements Runnable {
@@ -60,21 +62,6 @@ public class Main implements ApplicationRunner {
             getProxyIpTask();
         }
     }
-
-//    public static void main(String[] args) {
-//        try {
-//            // Step 1: Execute nslookup command
-//            List<String> ipAddresses = executeNslookupCommand("cdn-all.xn--b6gac.eu.org", "208.67.222.222");
-//
-//            ipAddresses.forEach(System.out::println);
-//
-//            // Step 2: Fetch ISO codes using curl command and write to file
-//            fetchAndWriteISOCodes(ipAddresses, "output.txt");
-//            System.out.println("完成");
-//        } catch (IOException | InterruptedException e) {
-//            e.printStackTrace();
-//        }
-//    }
 
     private static List<String> executeNslookupCommand(String domain, String dnsServer) throws IOException, InterruptedException {
         List<String> ipAddresses = new ArrayList<>();
@@ -111,7 +98,7 @@ public class Main implements ApplicationRunner {
                 // 添加cf记录
                 CountryEnum enumByCode = EnumUtils.getEnumByCode(CountryEnum.class, isoCode);
                 if (enumByCode != null) {
-                    String domainPrefix;
+                    String domainPrefix = null;
                     switch (enumByCode) {
                         case HK:
                             domainPrefix = dnsCfg.getHkDomainPrefix();
@@ -138,29 +125,34 @@ public class Main implements ApplicationRunner {
                             domainPrefix = dnsCfg.getDeDomainPrefix();
                             break;
                         default:
-                            domainPrefix = dnsCfg.getHkDomainPrefix();
+                            break;
                     }
-                    addCfDnsRecords(domainPrefix, ipAddress);
+                    if (domainPrefix != null) {
+                        addCfDnsRecords(domainPrefix, ipAddress);
+                    }
                 }
 
                 // Step 4: Write IP and ISO code to file
-                writer.write(ipAddress + " " + isoCode + "\n");
+                writer.write(ipAddress + " " + (isoCode == null ? "" : isoCode) + "\n");
             }
         }
     }
 
     private String executeCurlCommand(String ipAddress) throws IOException, InterruptedException {
-        String curlCommand = "curl https://geolite.info/geoip/v2.1/country/" + ipAddress +
-                " -H \"Authorization: Basic " + dnsCfg.getGeoipAuth() + "\"";
+//        String curlCommand = "curl https://geolite.info/geoip/v2.1/country/" + ipAddress +
+//                " -H \"Authorization: Basic " + dnsCfg.getGeoipAuth() + "\"";
+
+        String curlCommand = "curl 'https://api.iplocation.net/?cmd=ip-country&ip=" + ipAddress + "'";
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
         Process process = processBuilder.start();
-        String country = "";
+        String country = null;
 
         // Read the output of the command
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                if (line.contains("iso_code")) {
+//                if (line.contains("iso_code")) {
+                if (line.contains("country_code2")) {
                     if (line.contains(CountryEnum.HK.getCode())) {
                         country = CountryEnum.HK.getCode();
                         break;
@@ -194,6 +186,8 @@ public class Main implements ApplicationRunner {
     }
 
     private void getProxyIpTask() {
+        System.out.println("当前时间：" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "，开始更新DNS记录...");
+        long begin = System.currentTimeMillis();
         try {
             // Step 1: Execute nslookup command
             List<String> ipAddresses = executeNslookupCommand(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
@@ -205,26 +199,36 @@ public class Main implements ApplicationRunner {
 
             // Step 2: Fetch ISO codes using curl command and write to file
             fetchAndWriteISOCodes(ipAddresses, dnsCfg.getOutPutFile());
-            System.out.println("√√√获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + "√√√");
+            System.out.println("√√√ DNS记录添加完成 √√√");
+            System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + " √√√");
+            long end = System.currentTimeMillis();
+
+            System.out.println("总耗时：" + (end - begin) + " ms");
         } catch (IOException | InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    private void addCfDnsRecords(String domainPrefix, String ipAddress) {
+    private void addCfDnsRecords(String domainPrefix, String ipAddress) throws IOException, InterruptedException {
         String curlCommand = String.format(cfAddDnsRecordsApi, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken(), domainPrefix, ipAddress);
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
-        try {
-            Process process = processBuilder.start();
-            // Wait for the process to finish
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                System.out.println("Error executing addCfDnsRecords task");
-            }
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+        Process process = processBuilder.start();
+
+//        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+//            String line;
+//            System.out.println("add ------------------" + domainPrefix + "-------------------");
+//            while ((line = reader.readLine()) != null) {
+//                System.out.println(line);
+//            }
+//            System.out.println("add ------------------" + domainPrefix + "-------------------");
+//        }
+
+        // Wait for the process to finish
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            System.out.println("Error executing addCfDnsRecords task");
         }
-        System.out.println("域名：" + domainPrefix + "." + dnsCfg.getRootDomain() + " 的dns记录添加成功！");
+//        System.out.println("域名：" + domainPrefix + "." + dnsCfg.getRootDomain() + " 的dns记录添加成功！ip地址：" + ipAddress);
     }
 
     private void removeCfDnsRecords() {
@@ -239,7 +243,8 @@ public class Main implements ApplicationRunner {
                 dnsCfg.getDeDomainPrefix() + "." + dnsCfg.getRootDomain()
         );
         proxyDomainList.forEach(proxyDomain -> {
-            String curlCommand = String.format(cfRemoveDnsRecordsApi, cloudflareCfg.getZoneId(), proxyDomain, cloudflareCfg.getApiToken(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+            String curlCommand = String.format(cfRemoveDnsRecordsApi, cloudflareCfg.getZoneId(), proxyDomain, cloudflareCfg.getApiToken(),
+                    cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
             ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
             try {
                 Process process = processBuilder.start();
@@ -248,10 +253,20 @@ public class Main implements ApplicationRunner {
                 if (exitCode != 0) {
                     System.out.println("Error executing addCfDnsRecords task");
                 }
+//                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+//                    String line;
+//                    System.out.println("rm ------------------" + proxyDomain + "-------------------");
+//                    while ((line = reader.readLine()) != null) {
+//                        System.out.println(line);
+//                    }
+//                    System.out.println("rm ------------------" + proxyDomain + "-------------------");
+//                } catch (Exception e) {
+//                    e.printStackTrace();
+//                }
             } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
-            System.out.println("域名：" + proxyDomain + "的dns记录已清除！");
+            System.out.println("√√√ 域名：" + proxyDomain + "的dns记录已清除！ √√√");
         });
 
     }
@@ -267,7 +282,7 @@ public class Main implements ApplicationRunner {
         // 服务启动立马执行一次
         getProxyIpTask();
 
-        // 每天凌晨两点执行
-        taskScheduler.schedule(new MyTask(), new CronTrigger("0 0 2 * * ?"));
+        // 执行定时任务
+        taskScheduler.schedule(new MyTask(), new CronTrigger(dnsCfg.getCron()));
     }
 }

@@ -15,9 +15,10 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "dns-cfg")
 public class DnsCfg {
 
+    private String cron;
     private String dnsServer;
     private String proxyDomain;
-    private String geoipAuth;
+//    private String geoipAuth;
     private String outPutFile;
     private String rootDomain;
     private String hkDomainPrefix;
@@ -28,6 +29,14 @@ public class DnsCfg {
     private String ukDomainPrefix;
     private String nlDomainPrefix;
     private String deDomainPrefix;
+
+    public String getCron() {
+        return cron;
+    }
+
+    public void setCron(String cron) {
+        this.cron = cron;
+    }
 
     public String getRootDomain() {
         return rootDomain;
@@ -117,9 +126,9 @@ public class DnsCfg {
         this.proxyDomain = proxyDomain;
     }
 
-    public void setGeoipAuth(String geoipAuth) {
-        this.geoipAuth = geoipAuth;
-    }
+//    public void setGeoipAuth(String geoipAuth) {
+//        this.geoipAuth = geoipAuth;
+//    }
 
     public String getDnsServer() {
         return dnsServer;
@@ -129,7 +138,7 @@ public class DnsCfg {
         return proxyDomain;
     }
 
-    public String getGeoipAuth() {
-        return geoipAuth;
-    }
+//    public String getGeoipAuth() {
+//        return geoipAuth;
+//    }
 }

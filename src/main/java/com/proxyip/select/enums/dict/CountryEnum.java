@@ -13,13 +13,13 @@ import com.proxyip.select.enums.DictEnum;
 public enum CountryEnum implements DictEnum {
 
     US("US","美国"),
-    UK("UK","英国"),
+    UK("GB","英国"),
     NL("NL","荷兰"),
     DE("DE","德国"),
     HK("HK","香港"),
     SG("SG","新加坡"),
     KR("KR","韩国"),
-    JP("JP","日本"),
+    JP("JP","日本")
 
     ;
 
