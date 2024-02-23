@@ -91,50 +91,55 @@ public class Main implements ApplicationRunner {
 
     private void fetchAndWriteISOCodes(List<String> ipAddresses, String outputFile) throws IOException, InterruptedException {
         try (FileWriter writer = new FileWriter(outputFile)) {
-            for (String ipAddress : ipAddresses) {
-                // Step 3: Execute curl command
-                String isoCode = executeCurlCommand(ipAddress);
+            ipAddresses.parallelStream().forEach(ipAddress -> {
+                try {
+                    // Step 3: Execute curl command
+                    String isoCode = executeCurlCommand(ipAddress);
 
-                // 添加cf记录
-                CountryEnum enumByCode = EnumUtils.getEnumByCode(CountryEnum.class, isoCode);
-                if (enumByCode != null) {
-                    String domainPrefix = null;
-                    switch (enumByCode) {
-                        case HK:
-                            domainPrefix = dnsCfg.getHkDomainPrefix();
-                            break;
-                        case SG:
-                            domainPrefix = dnsCfg.getSgDomainPrefix();
-                            break;
-                        case KR:
-                            domainPrefix = dnsCfg.getKrDomainPrefix();
-                            break;
-                        case JP:
-                            domainPrefix = dnsCfg.getJpDomainPrefix();
-                            break;
-                        case US:
-                            domainPrefix = dnsCfg.getUsDomainPrefix();
-                            break;
-                        case UK:
-                            domainPrefix = dnsCfg.getUkDomainPrefix();
-                            break;
-                        case NL:
-                            domainPrefix = dnsCfg.getNlDomainPrefix();
-                            break;
-                        case DE:
-                            domainPrefix = dnsCfg.getDeDomainPrefix();
-                            break;
-                        default:
-                            break;
+                    // 添加cf记录
+                    CountryEnum enumByCode = EnumUtils.getEnumByCode(CountryEnum.class, isoCode);
+                    if (enumByCode != null) {
+                        String domainPrefix = null;
+                        switch (enumByCode) {
+                            case HK:
+                                domainPrefix = dnsCfg.getHkDomainPrefix();
+                                break;
+                            case SG:
+                                domainPrefix = dnsCfg.getSgDomainPrefix();
+                                break;
+                            case KR:
+                                domainPrefix = dnsCfg.getKrDomainPrefix();
+                                break;
+                            case JP:
+                                domainPrefix = dnsCfg.getJpDomainPrefix();
+                                break;
+                            case US:
+                                domainPrefix = dnsCfg.getUsDomainPrefix();
+                                break;
+                            case UK:
+                                domainPrefix = dnsCfg.getUkDomainPrefix();
+                                break;
+                            case NL:
+                                domainPrefix = dnsCfg.getNlDomainPrefix();
+                                break;
+                            case DE:
+                                domainPrefix = dnsCfg.getDeDomainPrefix();
+                                break;
+                            default:
+                                break;
+                        }
+                        if (domainPrefix != null) {
+                            addCfDnsRecords(domainPrefix, ipAddress);
+                        }
                     }
-                    if (domainPrefix != null) {
-                        addCfDnsRecords(domainPrefix, ipAddress);
-                    }
+
+                    // Step 4: Write IP and ISO code to file
+                    writer.write(ipAddress + " " + (isoCode == null ? "" : isoCode) + "\n");
+
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-
-                // Step 4: Write IP and ISO code to file
-                writer.write(ipAddress + " " + (isoCode == null ? "" : isoCode) + "\n");
-            }
+            });
         }
     }
 
@@ -242,7 +247,7 @@ public class Main implements ApplicationRunner {
                 dnsCfg.getNlDomainPrefix() + "." + dnsCfg.getRootDomain(),
                 dnsCfg.getDeDomainPrefix() + "." + dnsCfg.getRootDomain()
         );
-        proxyDomainList.forEach(proxyDomain -> {
+        proxyDomainList.parallelStream().forEach(proxyDomain -> {
             String curlCommand = String.format(cfRemoveDnsRecordsApi, cloudflareCfg.getZoneId(), proxyDomain, cloudflareCfg.getApiToken(),
                     cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
             ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
