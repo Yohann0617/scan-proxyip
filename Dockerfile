@@ -13,7 +13,7 @@ RUN mvn clean package -DskipTests
 RUN cp target/select-1.0.0.jar /app/select-1.0.0.jar
 
 # 支持AMD、ARM两种架构的镜像
-FROM chaochuang/dragonwell17:latest
+FROM dragonwell-registry.cn-hangzhou.cr.aliyuncs.com/dragonwell/dragonwell:8-centos
 
 RUN yum install -y bind-utils curl epel-release \
     && yum install -y jq \
