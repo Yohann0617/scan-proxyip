@@ -15,7 +15,8 @@ RUN cp target/select-1.0.0.jar /app/select-1.0.0.jar
 # 支持AMD、ARM两种架构的镜像
 FROM adoptopenjdk/openjdk8:latest
 
-RUN apt-get install -y bind-utils curl epel-release \
+RUN apt-get install -y bind9-utils curl \
+    && echo "deb http://download.fedoraproject.org/pub/epel/7/\$basearch/epel-release-7-\$basearch.rpm" >> /etc/yum.repos.d/epel.repo
     && apt-get install -y jq \
     && apt-get clean \
     && ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo Asia/Shanghai > /etc/timezone
