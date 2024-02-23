@@ -13,10 +13,11 @@ RUN mvn clean package -DskipTests
 RUN cp target/select-1.0.0.jar /app/select-1.0.0.jar
 
 # 支持AMD、ARM两种架构的镜像
-FROM adoptopenjdk/openjdk8:latest
+FROM chaochuang/dragonwell17:latest
 
-RUN apt-get update && apt-get install -y bind9-utils curl jq \
-    && apt-get clean \
+RUN yum install -y bind-utils curl epel-release \
+    && yum install -y jq \
+    && yum clean all \
     && ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo Asia/Shanghai > /etc/timezone
 
 # 设置工作目录
