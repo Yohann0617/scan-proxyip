@@ -1,12 +1,9 @@
 package com.proxyip.select.utils;
 
-import com.proxyip.select.enums.dict.CountryEnum;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -82,50 +79,29 @@ public class DnsUtils {
      *
      * @param ipAddress ip地址
      * @return 国家代码（例如：香港-HK）
-     * @throws IOException 异常
      */
-    public static String getIpCountry(String ipAddress) throws IOException {
+    public static String getIpCountry(String ipAddress) {
 //        String curlCommand = "curl https://geolite.info/geoip/v2.1/country/" + ipAddress +
 //                " -H \"Authorization: Basic " + dnsCfg.getGeoipAuth() + "\"";
 
         String curlCommand = String.format(GET_IP_LOCATION_API, ipAddress);
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
-        Process process = processBuilder.start();
         String country = null;
-
-        // Read the output of the command
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
+        try {
+            Process process = processBuilder.start();
+            // Read the output of the command
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
 //                if (line.contains("iso_code")) {
-                if (line.contains("country_code2")) {
-                    if (line.contains(CountryEnum.HK.getCode())) {
-                        country = CountryEnum.HK.getCode();
-                        break;
-                    } else if (line.contains(CountryEnum.US.getCode())) {
-                        country = CountryEnum.US.getCode();
-                        break;
-                    } else if (line.contains(CountryEnum.NL.getCode())) {
-                        country = CountryEnum.NL.getCode();
-                        break;
-                    } else if (line.contains(CountryEnum.SG.getCode())) {
-                        country = CountryEnum.SG.getCode();
-                        break;
-                    } else if (line.contains(CountryEnum.KR.getCode())) {
-                        country = CountryEnum.KR.getCode();
-                        break;
-                    } else if (line.contains(CountryEnum.DE.getCode())) {
-                        country = CountryEnum.DE.getCode();
-                        break;
-                    } else if (line.contains(CountryEnum.UK.getCode())) {
-                        country = CountryEnum.UK.getCode();
-                        break;
-                    } else if (line.contains(CountryEnum.JP.getCode())) {
-                        country = CountryEnum.JP.getCode();
-                        break;
+                    if (line.contains("country_code2")) {
+                        int index = line.indexOf("country_code2");
+                        country = line.substring(index + 16, index + 18).trim();
                     }
                 }
             }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return country;

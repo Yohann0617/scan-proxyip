@@ -17,6 +17,24 @@ public class CloudflareCfg {
 
     private String zoneId;
     private String apiToken;
+    private String rootDomain;
+    private String proxyDomainPrefix;
+
+    public String getRootDomain() {
+        return rootDomain;
+    }
+
+    public void setRootDomain(String rootDomain) {
+        this.rootDomain = rootDomain;
+    }
+
+    public String getProxyDomainPrefix() {
+        return proxyDomainPrefix;
+    }
+
+    public void setProxyDomainPrefix(String proxyDomainPrefix) {
+        this.proxyDomainPrefix = proxyDomainPrefix;
+    }
 
     public String getZoneId() {
         return zoneId;
@@ -32,5 +50,15 @@ public class CloudflareCfg {
 
     public void setApiToken(String apiToken) {
         this.apiToken = apiToken;
+    }
+
+    @Override
+    public String toString() {
+        return "CloudflareCfg{" +
+                "zoneId='" + zoneId + '\'' +
+                ", apiToken='" + apiToken + '\'' +
+                ", rootDomain='" + rootDomain + '\'' +
+                ", proxyDomainPrefix='" + proxyDomainPrefix + '\'' +
+                '}';
     }
 }

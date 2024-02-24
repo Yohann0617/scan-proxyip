@@ -20,15 +20,6 @@ public class DnsCfg {
     private String proxyDomain;
 //    private String geoipAuth;
     private String outPutFile;
-    private String rootDomain;
-    private String hkDomainPrefix;
-    private String sgDomainPrefix;
-    private String krDomainPrefix;
-    private String jpDomainPrefix;
-    private String usDomainPrefix;
-    private String ukDomainPrefix;
-    private String nlDomainPrefix;
-    private String deDomainPrefix;
 
     public String getCron() {
         return cron;
@@ -36,78 +27,6 @@ public class DnsCfg {
 
     public void setCron(String cron) {
         this.cron = cron;
-    }
-
-    public String getRootDomain() {
-        return rootDomain;
-    }
-
-    public void setRootDomain(String rootDomain) {
-        this.rootDomain = rootDomain;
-    }
-
-    public String getHkDomainPrefix() {
-        return hkDomainPrefix;
-    }
-
-    public void setHkDomainPrefix(String hkDomainPrefix) {
-        this.hkDomainPrefix = hkDomainPrefix;
-    }
-
-    public String getSgDomainPrefix() {
-        return sgDomainPrefix;
-    }
-
-    public void setSgDomainPrefix(String sgDomainPrefix) {
-        this.sgDomainPrefix = sgDomainPrefix;
-    }
-
-    public String getKrDomainPrefix() {
-        return krDomainPrefix;
-    }
-
-    public void setKrDomainPrefix(String krDomainPrefix) {
-        this.krDomainPrefix = krDomainPrefix;
-    }
-
-    public String getJpDomainPrefix() {
-        return jpDomainPrefix;
-    }
-
-    public void setJpDomainPrefix(String jpDomainPrefix) {
-        this.jpDomainPrefix = jpDomainPrefix;
-    }
-
-    public String getUsDomainPrefix() {
-        return usDomainPrefix;
-    }
-
-    public void setUsDomainPrefix(String usDomainPrefix) {
-        this.usDomainPrefix = usDomainPrefix;
-    }
-
-    public String getUkDomainPrefix() {
-        return ukDomainPrefix;
-    }
-
-    public void setUkDomainPrefix(String ukDomainPrefix) {
-        this.ukDomainPrefix = ukDomainPrefix;
-    }
-
-    public String getNlDomainPrefix() {
-        return nlDomainPrefix;
-    }
-
-    public void setNlDomainPrefix(String nlDomainPrefix) {
-        this.nlDomainPrefix = nlDomainPrefix;
-    }
-
-    public String getDeDomainPrefix() {
-        return deDomainPrefix;
-    }
-
-    public void setDeDomainPrefix(String deDomainPrefix) {
-        this.deDomainPrefix = deDomainPrefix;
     }
 
     public String getOutPutFile() {
@@ -141,4 +60,15 @@ public class DnsCfg {
 //    public String getGeoipAuth() {
 //        return geoipAuth;
 //    }
+
+
+    @Override
+    public String toString() {
+        return "DnsCfg{" +
+                "cron='" + cron + '\'' +
+                ", dnsServer='" + dnsServer + '\'' +
+                ", proxyDomain='" + proxyDomain + '\'' +
+                ", outPutFile='" + outPutFile + '\'' +
+                '}';
+    }
 }

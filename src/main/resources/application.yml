@@ -10,27 +10,13 @@ dns-cfg:
   # 地址：https://www.maxmind.com 创建License Key ，将Account ID和License key拼接成 `Account ID:License key` 并用base64编码的结果
 #  geoip-auth: OTc3MTUyOk9XZXlZRl9pR3BZYkszZkhmaEhnUmhrVFFNbVptVmYzcTU1b19tbWs=
   out-put-file: /app/proxyIps.txt
-  # root域名（cf托管的域名）
-  root-domain: yohann.buzz
-  # 香港域名前缀
-  hk-domain-prefix: hk.proxyip
-  # 新加坡域名前缀
-  sg-domain-prefix: sg.proxyip
-  # 韩国域名前缀
-  kr-domain-prefix: kr.proxyip
-  # 日本域名前缀
-  jp-domain-prefix: jp.proxyip
-  # 美国域名前缀
-  us-domain-prefix: us.proxyip
-  # 英国域名前缀
-  uk-domain-prefix: uk.proxyip
-  # 荷兰域名前缀
-  nl-domain-prefix: nl.proxyip
-  # 德国域名前缀
-  de-domain-prefix: de.proxyip
 
 # cloudflare配置
 cloudflare-cfg:
-  zone-id: fda91fbfcd6e61aec528eed1ebde063a
+  zone-id: xx
   # 需要自行创建
-  api-token: bQqfmquLlp4GkJ8RsqIIuCq_y33tjzk_72Ah5sSW
+  api-token: bb
+  # root域名（cf托管的域名）
+  root-domain: abc.com
+  # 优选ip域名前缀
+  proxy-domain-prefix: proxyip

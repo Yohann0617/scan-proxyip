@@ -31,3 +31,26 @@ EXPOSE 8017
 
 # 定义启动命令
 CMD ["java", "-jar", "select-1.0.0.jar"]
+
+## 支持AMD、ARM两种架构的镜像
+#FROM yohannfan/yohann-proxyip:latest
+#
+#RUN yum install -y bind-utils curl epel-release \
+#    && yum install -y jq \
+#    && yum clean all \
+#    && ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo Asia/Shanghai > /etc/timezone
+#
+## 设置工作目录
+#WORKDIR /app
+#
+## 从第一阶段复制构建的jar文件
+#COPY target/select-1.0.0.jar .
+#
+## 暴露应用的端口
+#EXPOSE 8017
+#
+## 设置中文字符集
+#ENV LANG=zh_CN.UTF-8
+#
+## 定义启动命令
+#CMD ["java", "-jar", "select-1.0.0.jar"]

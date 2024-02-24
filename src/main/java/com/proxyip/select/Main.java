@@ -15,9 +15,9 @@ import javax.annotation.Resource;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -45,57 +45,28 @@ public class Main implements ApplicationRunner {
      * @throws IOException 异常
      */
     private void addDnsRecordAndWriteToFile(List<String> ipAddresses, String outputFile) throws IOException {
+        List<String> countryCodeList = Arrays.stream(CountryEnum.values()).map(CountryEnum::getCode).collect(Collectors.toList());
         try (FileWriter writer = new FileWriter(outputFile)) {
             ipAddresses.parallelStream().forEach(ipAddress -> {
                 try {
                     // Step 3: Execute curl command
-                    String isoCode = DnsUtils.getIpCountry(ipAddress);
+                    String countryCode = DnsUtils.getIpCountry(ipAddress);
 
                     // 添加cf记录
-                    CountryEnum enumByCode = EnumUtils.getEnumByCode(CountryEnum.class, isoCode);
-                    if (enumByCode != null) {
-                        String domainPrefix = null;
-                        switch (enumByCode) {
-                            case HK:
-                                domainPrefix = dnsCfg.getHkDomainPrefix();
-                                break;
-                            case SG:
-                                domainPrefix = dnsCfg.getSgDomainPrefix();
-                                break;
-                            case KR:
-                                domainPrefix = dnsCfg.getKrDomainPrefix();
-                                break;
-                            case JP:
-                                domainPrefix = dnsCfg.getJpDomainPrefix();
-                                break;
-                            case US:
-                                domainPrefix = dnsCfg.getUsDomainPrefix();
-                                break;
-                            case UK:
-                                domainPrefix = dnsCfg.getUkDomainPrefix();
-                                break;
-                            case NL:
-                                domainPrefix = dnsCfg.getNlDomainPrefix();
-                                break;
-                            case DE:
-                                domainPrefix = dnsCfg.getDeDomainPrefix();
-                                break;
-                            default:
-                                break;
-                        }
-                        if (domainPrefix != null) {
-                            DnsUtils.addCfDnsRecords(domainPrefix, ipAddress, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
-                        }
+                    if (countryCodeList.contains(countryCode)) {
+                        DnsUtils.addCfDnsRecords(EnumUtils.getEnumByCode(CountryEnum.class, countryCode).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix(),
+                                ipAddress, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
                     }
 
                     // Step 4: Write IP and ISO code to file
-                    writer.write(ipAddress + " " + (isoCode == null ? "" : isoCode) + "\n");
+                    writer.write(ipAddress + " " + (countryCode == null ? "" : countryCode) + "\n");
 
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             });
         }
+
     }
 
     /**
@@ -129,16 +100,9 @@ public class Main implements ApplicationRunner {
      * 清除dns旧记录
      */
     private void rmCfDnsRecords() {
-        List<String> proxyDomainList = Arrays.asList(
-                dnsCfg.getHkDomainPrefix() + "." + dnsCfg.getRootDomain(),
-                dnsCfg.getSgDomainPrefix() + "." + dnsCfg.getRootDomain(),
-                dnsCfg.getKrDomainPrefix() + "." + dnsCfg.getRootDomain(),
-                dnsCfg.getJpDomainPrefix() + "." + dnsCfg.getRootDomain(),
-                dnsCfg.getUsDomainPrefix() + "." + dnsCfg.getRootDomain(),
-                dnsCfg.getUkDomainPrefix() + "." + dnsCfg.getRootDomain(),
-                dnsCfg.getNlDomainPrefix() + "." + dnsCfg.getRootDomain(),
-                dnsCfg.getDeDomainPrefix() + "." + dnsCfg.getRootDomain()
-        );
+        List<String> proxyDomainList = Arrays.stream(CountryEnum.values())
+                .map(x -> x.getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix() + "." + cloudflareCfg.getRootDomain())
+                .collect(Collectors.toList());
         DnsUtils.removeCfDnsRecords(proxyDomainList, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
     }
 
