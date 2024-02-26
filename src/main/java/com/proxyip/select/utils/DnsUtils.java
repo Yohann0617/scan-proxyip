@@ -107,7 +107,7 @@ public class DnsUtils {
     }
 
     /**
-     * 获取ip地址归属国家（Geoip2）（更精准）
+     * 获取ip地址归属国家（Geoip2）（更精准）（有限额：一天1000次查询）
      *
      * @param ipAddress ip地址
      * @param geoIpAuth geoIpAuth
@@ -123,9 +123,9 @@ public class DnsUtils {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    if (line.contains("\"country\"")) {
-                        int index = line.indexOf("\"country\"");
-                        country = line.substring(index + 23, index + 25);
+                    if (line.contains("\"iso_code\"")) {
+                        int index = line.indexOf("\"iso_code\"");
+                        country = line.substring(index + 12, index + 14);
                         break;
                     }
                 }
@@ -204,13 +204,5 @@ public class DnsUtils {
             System.out.println("√√√ 域名：" + proxyDomain + "的dns记录已清除！ √√√");
         });
 
-    }
-
-    public static void main(String[] args) {
-        String rst = "{\"continent\":{\"code\":\"AS\",\"geoname_id\":6255147,\"names\":{\"fr\":\"Asie\",\"ja\":\"アジア\",\"pt-BR\":\"Ásia\",\"ru\":\"Азия\",\"zh-CN\":\"亚洲\",\"de\":\"Asien\",\"en\":\"Asia\",\"es\":\"Asia\"}},\"country\":{\"iso_code\":\"CN\",\"geoname_id\":1814991,\"names\":{\"ru\":\"Китай\",\"zh-CN\":\"中国\",\"de\":\"China\",\"en\":\"China\",\"es\":\"China\",\"fr\":\"Chine\",\"ja\":\"中国\",\"pt-BR\":\"China\"}},\"registered_country\":{\"iso_code\":\"CN\",\"geoname_id\":1814991,\"names\":{\"ru\":\"Китай\",\"zh-CN\":\"中国\",\"de\":\"China\",\"en\":\"China\",\"es\":\"China\",\"fr\":\"Chine\",\"ja\":\"中国\",\"pt-BR\":\"China\"}},\"traits\":{\"ip_address\":\"240e:46c:6600:14b1:891:7c9d:d158:f5c2\",\"network\":\"240e:46c::/32\"}}";
-        if (rst.contains("\"country\"")) {
-            int index = rst.indexOf("\"country\"");
-            System.out.println(rst.substring(index + 23, index + 25));
-        }
     }
 }

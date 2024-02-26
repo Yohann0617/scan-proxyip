@@ -54,8 +54,9 @@ public class Main implements ApplicationRunner {
 
                     // 添加cf记录
                     if (countryCodeList.contains(countryCode)) {
-                        DnsUtils.addCfDnsRecords(EnumUtils.getEnumByCode(CountryEnum.class, countryCode).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix(),
-                                ipAddress, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+                        String prefix = EnumUtils.getEnumByCode(CountryEnum.class, countryCode).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
+                        DnsUtils.addCfDnsRecords(prefix, ipAddress, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+                        System.out.println("√√√ 域名：" + prefix + "." + cloudflareCfg.getRootDomain() + " 的DNS记录添加完成!!! √√√");
                     }
 
                     // Step 4: Write IP and ISO code to file
@@ -83,10 +84,11 @@ public class Main implements ApplicationRunner {
 
             // 清除dns旧记录
             rmCfDnsRecords();
+            System.out.println("√√√ 所有DNS记录已清除成功，开始添加DNS记录... √√√");
 
             // Step 2: Fetch ISO codes using curl command and write to file
             addDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile());
-            System.out.println("√√√ DNS记录添加完成 √√√");
+            System.out.println("√√√ 所有DNS记录添加完成!!! √√√");
             System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + " √√√");
             long end = System.currentTimeMillis();
 
