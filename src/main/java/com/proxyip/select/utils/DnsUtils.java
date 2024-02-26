@@ -42,6 +42,37 @@ public class DnsUtils {
             " -H \"Authorization: Basic %s\"";
 
     /**
+     * 个人网盘地址
+     */
+    public static String NET_DISC_API = "curl -X POST -F \"image=@%s;type=application/octet-stream\" %s";
+
+    /**
+     * 发送本地文件到个人网盘
+     *
+     * @param filePath   本地文件全路径
+     * @param apiAddress 网盘api地址
+     */
+    public static void updateFileToNetDisc(String filePath, String apiAddress) {
+        String curlCommand = String.format(NET_DISC_API, filePath, apiAddress);
+        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+        try {
+            Process process = processBuilder.start();
+            // Read the output of the command
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.contains("\"code\":1")) {
+                        System.out.println("√√√ 文件：" + filePath + " 已发送至个人网盘 √√√");
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
      * 解析域名
      *
      * @param domain    域名

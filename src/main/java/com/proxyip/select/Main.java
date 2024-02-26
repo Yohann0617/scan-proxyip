@@ -76,7 +76,7 @@ public class Main implements ApplicationRunner {
         System.out.println("当前时间：" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "，开始更新DNS记录...");
         long begin = System.currentTimeMillis();
         try {
-            // Step 1: Execute nslookup command
+            // 获取proxyIps
             List<String> ipAddresses = DnsUtils.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
 
 //            ipAddresses.forEach(System.out::println);
@@ -85,10 +85,16 @@ public class Main implements ApplicationRunner {
             rmCfDnsRecords();
             System.out.println("√√√ 所有DNS记录已清除成功，开始添加DNS记录... √√√");
 
-            // Step 2: Fetch ISO codes using curl command and write to file
+            // 添加DNS记录并保存到文件
             addDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile());
             System.out.println("√√√ 所有DNS记录添加完成!!! √√√");
             System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + " √√√");
+
+            // 发送到网盘api
+            if (!"".equals(dnsCfg.getUploadApi())) {
+                DnsUtils.updateFileToNetDisc(dnsCfg.getOutPutFile(), dnsCfg.getUploadApi());
+            }
+
             long end = System.currentTimeMillis();
 
             System.out.println("总耗时：" + (end - begin) + " ms");
@@ -109,8 +115,10 @@ public class Main implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        // 服务启动立马执行一次
-        updateProxyIpTask();
+        if (dnsCfg.getPowerOnExec()) {
+            // 服务启动立马执行一次
+            updateProxyIpTask();
+        }
 
         // 执行定时任务
         taskScheduler.schedule(this::updateProxyIpTask, new CronTrigger(dnsCfg.getCron()));

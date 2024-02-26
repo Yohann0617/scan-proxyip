@@ -15,11 +15,21 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "dns-cfg")
 public class DnsCfg {
 
+    private Boolean powerOnExec;
     private String cron;
     private String dnsServer;
     private String proxyDomain;
     private String geoipAuth;
     private String outPutFile;
+    private String uploadApi;
+
+    public Boolean getPowerOnExec() {
+        return powerOnExec;
+    }
+
+    public void setPowerOnExec(Boolean powerOnExec) {
+        this.powerOnExec = powerOnExec;
+    }
 
     public String getCron() {
         return cron;
@@ -59,5 +69,13 @@ public class DnsCfg {
 
     public String getGeoipAuth() {
         return geoipAuth;
+    }
+
+    public String getUploadApi() {
+        return uploadApi;
+    }
+
+    public void setUploadApi(String uploadApi) {
+        this.uploadApi = uploadApi;
     }
 }
