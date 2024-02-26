@@ -38,6 +38,8 @@ public class DnsUtils {
      * 获取ip归属国家api
      */
     public static String GET_IP_LOCATION_API = "curl 'https://api.iplocation.net/?cmd=ip-country&ip=%s'";
+    public static String GET_GEO_IP_LOCATION_API = "curl https://geolite.info/geoip/v2.1/country/%s" +
+            " -H \"Authorization: Basic %s\"";
 
     /**
      * 解析域名
@@ -81,9 +83,6 @@ public class DnsUtils {
      * @return 国家代码（例如：香港-HK）
      */
     public static String getIpCountry(String ipAddress) {
-//        String curlCommand = "curl https://geolite.info/geoip/v2.1/country/" + ipAddress +
-//                " -H \"Authorization: Basic " + dnsCfg.getGeoipAuth() + "\"";
-
         String curlCommand = String.format(GET_IP_LOCATION_API, ipAddress);
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
         String country = null;
@@ -93,10 +92,41 @@ public class DnsUtils {
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-//                if (line.contains("iso_code")) {
                     if (line.contains("country_code2")) {
                         int index = line.indexOf("country_code2");
                         country = line.substring(index + 16, index + 18).trim();
+                        break;
+                    }
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return country;
+    }
+
+    /**
+     * 获取ip地址归属国家（Geoip2）（更精准）
+     *
+     * @param ipAddress ip地址
+     * @param geoIpAuth geoIpAuth
+     * @return 国家代码（例如：香港-HK）
+     */
+    public static String getIpCountry(String ipAddress, String geoIpAuth) {
+        String curlCommand = String.format(GET_GEO_IP_LOCATION_API, ipAddress, geoIpAuth);
+        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+        String country = null;
+        try {
+            Process process = processBuilder.start();
+            // Read the output of the command
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.contains("\"country\"")) {
+                        int index = line.indexOf("\"country\"");
+                        country = line.substring(index + 23, index + 25);
+                        break;
                     }
                 }
             }
@@ -174,5 +204,13 @@ public class DnsUtils {
             System.out.println("√√√ 域名：" + proxyDomain + "的dns记录已清除！ √√√");
         });
 
+    }
+
+    public static void main(String[] args) {
+        String rst = "{\"continent\":{\"code\":\"AS\",\"geoname_id\":6255147,\"names\":{\"fr\":\"Asie\",\"ja\":\"アジア\",\"pt-BR\":\"Ásia\",\"ru\":\"Азия\",\"zh-CN\":\"亚洲\",\"de\":\"Asien\",\"en\":\"Asia\",\"es\":\"Asia\"}},\"country\":{\"iso_code\":\"CN\",\"geoname_id\":1814991,\"names\":{\"ru\":\"Китай\",\"zh-CN\":\"中国\",\"de\":\"China\",\"en\":\"China\",\"es\":\"China\",\"fr\":\"Chine\",\"ja\":\"中国\",\"pt-BR\":\"China\"}},\"registered_country\":{\"iso_code\":\"CN\",\"geoname_id\":1814991,\"names\":{\"ru\":\"Китай\",\"zh-CN\":\"中国\",\"de\":\"China\",\"en\":\"China\",\"es\":\"China\",\"fr\":\"Chine\",\"ja\":\"中国\",\"pt-BR\":\"China\"}},\"traits\":{\"ip_address\":\"240e:46c:6600:14b1:891:7c9d:d158:f5c2\",\"network\":\"240e:46c::/32\"}}";
+        if (rst.contains("\"country\"")) {
+            int index = rst.indexOf("\"country\"");
+            System.out.println(rst.substring(index + 23, index + 25));
+        }
     }
 }

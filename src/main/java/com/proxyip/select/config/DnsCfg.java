@@ -18,7 +18,7 @@ public class DnsCfg {
     private String cron;
     private String dnsServer;
     private String proxyDomain;
-//    private String geoipAuth;
+    private String geoipAuth;
     private String outPutFile;
 
     public String getCron() {
@@ -45,9 +45,9 @@ public class DnsCfg {
         this.proxyDomain = proxyDomain;
     }
 
-//    public void setGeoipAuth(String geoipAuth) {
-//        this.geoipAuth = geoipAuth;
-//    }
+    public void setGeoipAuth(String geoipAuth) {
+        this.geoipAuth = geoipAuth;
+    }
 
     public String getDnsServer() {
         return dnsServer;
@@ -57,18 +57,7 @@ public class DnsCfg {
         return proxyDomain;
     }
 
-//    public String getGeoipAuth() {
-//        return geoipAuth;
-//    }
-
-
-    @Override
-    public String toString() {
-        return "DnsCfg{" +
-                "cron='" + cron + '\'' +
-                ", dnsServer='" + dnsServer + '\'' +
-                ", proxyDomain='" + proxyDomain + '\'' +
-                ", outPutFile='" + outPutFile + '\'' +
-                '}';
+    public String getGeoipAuth() {
+        return geoipAuth;
     }
 }

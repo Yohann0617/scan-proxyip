@@ -51,14 +51,4 @@ public class CloudflareCfg {
     public void setApiToken(String apiToken) {
         this.apiToken = apiToken;
     }
-
-    @Override
-    public String toString() {
-        return "CloudflareCfg{" +
-                "zoneId='" + zoneId + '\'' +
-                ", apiToken='" + apiToken + '\'' +
-                ", rootDomain='" + rootDomain + '\'' +
-                ", proxyDomainPrefix='" + proxyDomainPrefix + '\'' +
-                '}';
-    }
 }

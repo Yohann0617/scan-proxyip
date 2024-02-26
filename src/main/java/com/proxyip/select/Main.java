@@ -50,7 +50,7 @@ public class Main implements ApplicationRunner {
             ipAddresses.parallelStream().forEach(ipAddress -> {
                 try {
                     // Step 3: Execute curl command
-                    String countryCode = DnsUtils.getIpCountry(ipAddress);
+                    String countryCode = DnsUtils.getIpCountry(ipAddress, dnsCfg.getGeoipAuth());
 
                     // 添加cf记录
                     if (countryCodeList.contains(countryCode)) {
