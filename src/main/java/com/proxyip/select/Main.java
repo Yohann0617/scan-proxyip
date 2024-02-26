@@ -101,7 +101,7 @@ public class Main implements ApplicationRunner {
 
             // 发送到网盘api
             if (!"".equals(dnsCfg.getUploadApi())) {
-                DnsUtils.updateFileToNetDisc(dnsCfg.getOutPutFile(), dnsCfg.getUploadApi());
+                DnsUtils.uploadFileToNetDisc(dnsCfg.getOutPutFile(), dnsCfg.getUploadApi());
             }
         }
 

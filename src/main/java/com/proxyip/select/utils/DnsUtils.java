@@ -52,7 +52,7 @@ public class DnsUtils {
      * @param filePath   本地文件全路径
      * @param apiAddress 网盘api地址
      */
-    public static void updateFileToNetDisc(String filePath, String apiAddress) {
+    public static void uploadFileToNetDisc(String filePath, String apiAddress) {
         String curlCommand = String.format(NET_DISC_API, filePath, apiAddress);
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
         try {
