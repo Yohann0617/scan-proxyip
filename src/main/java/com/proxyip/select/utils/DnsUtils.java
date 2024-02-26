@@ -93,6 +93,7 @@ public class DnsUtils {
                     if (line.startsWith("Address:") && !line.contains("#")) {
                         String ipAddress = line.substring(line.indexOf(":") + 1).trim();
                         ipAddresses.add(ipAddress);
+                        break;
                     }
                 }
             }
