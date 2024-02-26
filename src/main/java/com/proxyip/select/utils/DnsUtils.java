@@ -78,34 +78,30 @@ public class DnsUtils {
      * @param domain    域名
      * @param dnsServer 域名解析服务器地址
      * @return 解析后的ip地址
+     * @throws IOException          异常
+     * @throws InterruptedException 异常
      */
-    public static List<String> resolveDomain(String domain, String dnsServer) {
+    public static List<String> resolveDomain(String domain, String dnsServer) throws IOException, InterruptedException {
         List<String> ipAddresses = new ArrayList<>();
         ProcessBuilder processBuilder = new ProcessBuilder("nslookup", domain, dnsServer);
-        try {
+        Process process = processBuilder.start();
 
-            Process process = processBuilder.start();
-
-            // Read the output of the command
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    if (line.startsWith("Address:") && !line.contains("#")) {
-                        String ipAddress = line.substring(line.indexOf(":") + 1).trim();
-                        ipAddresses.add(ipAddress);
-                        break;
-                    }
+        // Read the output of the command
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                if (line.startsWith("Address:") && !line.contains("#")) {
+                    String ipAddress = line.substring(line.indexOf(":") + 1).trim();
+                    ipAddresses.add(ipAddress);
                 }
             }
+        }
 
-            // Wait for the process to finish
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                System.out.println("Error executing nslookup command");
+        // Wait for the process to finish
+        int exitCode = process.waitFor();
+        if (exitCode != 0) {
+            System.out.println("Error executing nslookup command");
 //            System.exit(1);
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
         }
 
         return ipAddresses;
@@ -245,6 +241,5 @@ public class DnsUtils {
             }
             System.out.println("√√√ 域名：" + proxyDomain + "的dns记录已清除！ √√√");
         });
-
     }
 }

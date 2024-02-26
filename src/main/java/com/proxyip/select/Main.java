@@ -45,6 +45,11 @@ public class Main implements ApplicationRunner {
      * @throws IOException 异常
      */
     private void addDnsRecordAndWriteToFile(List<String> ipAddresses, String outputFile) {
+        if (ipAddresses == null || ipAddresses.size() == 0) {
+            System.out.println("ip列表为空，不执行DNS记录更新任务");
+            return;
+        }
+
         List<String> countryCodeList = Arrays.stream(CountryEnum.values()).map(CountryEnum::getCode).collect(Collectors.toList());
         try (FileWriter writer = new FileWriter(outputFile)) {
             ipAddresses.parallelStream().forEach(ipAddress -> {
@@ -68,6 +73,9 @@ public class Main implements ApplicationRunner {
                     e.printStackTrace();
                 }
             });
+
+            System.out.println("√√√ 所有DNS记录添加完成!!! √√√");
+            System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + " √√√");
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("写入文件：" + outputFile + "失败");
@@ -82,16 +90,18 @@ public class Main implements ApplicationRunner {
         System.out.println("当前时间：" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "，开始更新DNS记录...");
         long begin = System.currentTimeMillis();
         // 获取proxyIps
-        List<String> ipAddresses = DnsUtils.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
+        List<String> ipAddresses = null;
+        try {
+            ipAddresses = DnsUtils.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+        }
 
         // 清除dns旧记录
         rmCfDnsRecords();
-        System.out.println("√√√ 所有DNS记录已清除成功，开始添加DNS记录... √√√");
 
         // 添加DNS记录并保存到文件
         addDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile());
-        System.out.println("√√√ 所有DNS记录添加完成!!! √√√");
-        System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + " √√√");
 
         // 发送到网盘api
         if (!"".equals(dnsCfg.getUploadApi())) {
@@ -111,6 +121,7 @@ public class Main implements ApplicationRunner {
                 .map(x -> x.getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix() + "." + cloudflareCfg.getRootDomain())
                 .collect(Collectors.toList());
         DnsUtils.removeCfDnsRecords(proxyDomainList, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+        System.out.println("√√√ 所有DNS记录已清除成功，开始添加DNS记录... √√√");
     }
 
     /**
