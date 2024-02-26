@@ -51,9 +51,6 @@ public class Main implements ApplicationRunner {
                 try {
                     // 获取国家代码
                     String countryCode = DnsUtils.getIpCountry(ipAddress, dnsCfg.getGeoipAuth());
-                    if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
-                        countryCode = DnsUtils.getIpCountry(ipAddress);
-                    }
 
                     // 添加cf记录
                     if (countryCodeList.contains(countryCode)) {
@@ -113,8 +110,29 @@ public class Main implements ApplicationRunner {
         DnsUtils.removeCfDnsRecords(proxyDomainList, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
     }
 
+    /**
+     * 校验参数是否配置
+     */
+    private void checkCfg() {
+        if ("".equals(cloudflareCfg.getZoneId())) {
+            throw new RuntimeException("请配置zoneId");
+        }
+        if ("".equals(cloudflareCfg.getApiToken())) {
+            throw new RuntimeException("请配置apiToken");
+        }
+        if ("".equals(cloudflareCfg.getRootDomain())) {
+            throw new RuntimeException("请配置root域名（cf托管的域名）");
+        }
+        if ("".equals(cloudflareCfg.getProxyDomainPrefix())) {
+            throw new RuntimeException("请配置优选ip域名前缀");
+        }
+    }
+
     @Override
     public void run(ApplicationArguments args) {
+        // 校验参数
+        checkCfg();
+
         if (dnsCfg.getPowerOnExec()) {
             // 服务启动立马执行一次
             updateProxyIpTask();

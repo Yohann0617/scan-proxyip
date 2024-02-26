@@ -148,9 +148,15 @@ public class DnsUtils {
      * @return 国家代码（例如：香港-HK）
      */
     public static String getIpCountry(String ipAddress, String geoIpAuth) {
+        String country = null;
+
+        // 不使用GeoIP2
+        if ("".equals(geoIpAuth)) {
+            return getIpCountry(ipAddress);
+        }
+
         String curlCommand = String.format(GET_GEO_IP_LOCATION_API, ipAddress, geoIpAuth);
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
-        String country = null;
         try {
             Process process = processBuilder.start();
             // Read the output of the command
