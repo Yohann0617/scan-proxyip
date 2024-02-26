@@ -37,8 +37,8 @@ public class DnsUtils {
     /**
      * 获取ip归属国家api
      */
-    public static String GET_IP_LOCATION_API = "curl 'https://api.iplocation.net/?cmd=ip-country&ip=%s'";
-    public static String GET_GEO_IP_LOCATION_API = "curl https://geolite.info/geoip/v2.1/country/%s" +
+    public static String GET_IP_LOCATION_API = "curl \"https://api.iplocation.net/?cmd=ip-country&ip=%s\"";
+    public static String GET_GEO_IP_LOCATION_API = "curl \"https://geolite.info/geoip/v2.1/country/%s\"" +
             " -H \"Authorization: Basic %s\"";
 
     /**

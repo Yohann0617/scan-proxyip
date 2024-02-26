@@ -5,6 +5,7 @@ import com.proxyip.select.config.DnsCfg;
 import com.proxyip.select.enums.EnumUtils;
 import com.proxyip.select.enums.dict.CountryEnum;
 import com.proxyip.select.utils.DnsUtils;
+import com.proxyip.select.utils.NetUtils;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.scheduling.TaskScheduler;
@@ -48,24 +49,28 @@ public class Main implements ApplicationRunner {
         List<String> countryCodeList = Arrays.stream(CountryEnum.values()).map(CountryEnum::getCode).collect(Collectors.toList());
         try (FileWriter writer = new FileWriter(outputFile)) {
             ipAddresses.parallelStream().forEach(ipAddress -> {
-                try {
-                    // 获取国家代码
-                    String countryCode = DnsUtils.getIpCountry(ipAddress, dnsCfg.getGeoipAuth());
-                    if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
-                        countryCode = DnsUtils.getIpCountry(ipAddress);
+                if (NetUtils.getPingResult(ipAddress)) {
+                    try {
+                        // 获取国家代码
+                        String countryCode = DnsUtils.getIpCountry(ipAddress, dnsCfg.getGeoipAuth());
+                        if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
+                            countryCode = DnsUtils.getIpCountry(ipAddress);
+                        }
+
+                        // 添加cf记录
+                        if (countryCodeList.contains(countryCode)) {
+                            String prefix = EnumUtils.getEnumByCode(CountryEnum.class, countryCode).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
+                            DnsUtils.addCfDnsRecords(prefix, ipAddress, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+                        }
+
+                        // 写入文件
+                        writer.write(ipAddress + " " + (countryCode == null ? "" : countryCode) + "\n");
+
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-
-                    // 添加cf记录
-                    if (countryCodeList.contains(countryCode)) {
-                        String prefix = EnumUtils.getEnumByCode(CountryEnum.class, countryCode).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
-                        DnsUtils.addCfDnsRecords(prefix, ipAddress, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
-                    }
-
-                    // 写入文件
-                    writer.write(ipAddress + " " + (countryCode == null ? "" : countryCode) + "\n");
-
-                } catch (Exception e) {
-                    e.printStackTrace();
+                } else {
+                    System.out.println("IP：" + ipAddress + " 无法ping通，已跳过");
                 }
             });
 

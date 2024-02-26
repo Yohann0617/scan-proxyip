@@ -18,12 +18,12 @@ public class NetUtils {
         boolean reachable = false;
         try {
             InetAddress inetAddress = InetAddress.getByName(ipAddress);
-            reachable = inetAddress.isReachable(5000); // Timeout in milliseconds
-            if (reachable) {
-                System.out.println(ipAddress + " is reachable");
-            } else {
-                System.out.println(ipAddress + " is not reachable");
-            }
+            reachable = inetAddress.isReachable(500); // Timeout in milliseconds
+//            if (reachable) {
+//                System.out.println(ipAddress + " is reachable");
+//            } else {
+//                System.out.println(ipAddress + " is not reachable");
+//            }
         } catch (IOException e) {
             System.out.println("Error occurred: " + e.getMessage());
         }
