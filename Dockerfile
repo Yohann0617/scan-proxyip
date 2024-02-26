@@ -9,8 +9,8 @@ COPY pom.xml .
 COPY src ./src
 
 # 执行Maven构建并将构建的jar文件复制到指定目录
-RUN mvn clean package -DskipTests
-RUN cp target/select-1.0.0.jar /app/select-1.0.0.jar
+RUN mvn clean package -DskipTests \
+    && cp target/select-1.0.0.jar /app/select-1.0.0.jar
 
 # 支持AMD、ARM两种架构的镜像
 FROM dragonwell-registry.cn-hangzhou.cr.aliyuncs.com/dragonwell/dragonwell:8-centos
