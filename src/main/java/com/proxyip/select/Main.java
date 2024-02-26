@@ -51,6 +51,9 @@ public class Main implements ApplicationRunner {
                 try {
                     // 获取国家代码
                     String countryCode = DnsUtils.getIpCountry(ipAddress, dnsCfg.getGeoipAuth());
+                    if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
+                        countryCode = DnsUtils.getIpCountry(ipAddress);
+                    }
 
                     // 添加cf记录
                     if (countryCodeList.contains(countryCode)) {
