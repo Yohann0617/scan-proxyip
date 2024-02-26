@@ -18,7 +18,7 @@ public enum CountryEnum implements DictEnum {
      * 国家代号
      */
     US("US", "美国"),
-    UK("UK", "英国"),
+    GB("GB", "英国"),
     //    UK("GB", "英国", "uk"),
     NL("NL", "荷兰"),
     DE("DE", "德国"),

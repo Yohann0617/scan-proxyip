@@ -77,7 +77,7 @@ public class DnsUtils {
     }
 
     /**
-     * 获取ip地址归属国家 （英国代码需要特殊处理 -> GB）
+     * 获取ip地址归属国家
      *
      * @param ipAddress ip地址
      * @return 国家代码（例如：香港-HK）
