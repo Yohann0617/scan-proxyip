@@ -56,7 +56,6 @@ public class Main implements ApplicationRunner {
                     if (countryCodeList.contains(countryCode)) {
                         String prefix = EnumUtils.getEnumByCode(CountryEnum.class, countryCode).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
                         DnsUtils.addCfDnsRecords(prefix, ipAddress, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
-                        System.out.println("√√√ 域名：" + prefix + "." + cloudflareCfg.getRootDomain() + " 的DNS记录添加完成!!! √√√");
                     }
 
                     // Step 4: Write IP and ISO code to file
