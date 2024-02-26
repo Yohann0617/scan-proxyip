@@ -19,7 +19,6 @@ public enum CountryEnum implements DictEnum {
      */
     US("US", "美国"),
     GB("GB", "英国"),
-    //    UK("GB", "英国", "uk"),
     NL("NL", "荷兰"),
     DE("DE", "德国"),
     HK("HK", "香港"),
@@ -37,12 +36,6 @@ public enum CountryEnum implements DictEnum {
         this.code = code;
         this.desc = desc;
         this.lowCode = code.toLowerCase(Locale.ROOT);
-    }
-
-    CountryEnum(String code, String desc, String lowCode) {
-        this.code = code;
-        this.desc = desc;
-        this.lowCode = lowCode;
     }
 
     public String getLowCode() {

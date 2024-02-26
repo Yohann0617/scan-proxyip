@@ -78,30 +78,33 @@ public class DnsUtils {
      * @param domain    域名
      * @param dnsServer 域名解析服务器地址
      * @return 解析后的ip地址
-     * @throws IOException          异常
-     * @throws InterruptedException 异常
      */
-    public static List<String> resolveDomain(String domain, String dnsServer) throws IOException, InterruptedException {
+    public static List<String> resolveDomain(String domain, String dnsServer) {
         List<String> ipAddresses = new ArrayList<>();
         ProcessBuilder processBuilder = new ProcessBuilder("nslookup", domain, dnsServer);
-        Process process = processBuilder.start();
+        try {
 
-        // Read the output of the command
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith("Address:") && !line.contains("#")) {
-                    String ipAddress = line.substring(line.indexOf(":") + 1).trim();
-                    ipAddresses.add(ipAddress);
+            Process process = processBuilder.start();
+
+            // Read the output of the command
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    if (line.startsWith("Address:") && !line.contains("#")) {
+                        String ipAddress = line.substring(line.indexOf(":") + 1).trim();
+                        ipAddresses.add(ipAddress);
+                    }
                 }
             }
-        }
 
-        // Wait for the process to finish
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            System.out.println("Error executing nslookup command");
+            // Wait for the process to finish
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                System.out.println("Error executing nslookup command");
 //            System.exit(1);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
         }
 
         return ipAddresses;
@@ -175,14 +178,12 @@ public class DnsUtils {
      * @param ipAddress    ip地址
      * @param zoneId       zoneId
      * @param apiToken     apiToken
-     * @throws IOException          异常
-     * @throws InterruptedException 异常
      */
-    public static void addCfDnsRecords(String domainPrefix, String ipAddress, String zoneId, String apiToken)
-            throws IOException, InterruptedException {
+    public static void addCfDnsRecords(String domainPrefix, String ipAddress, String zoneId, String apiToken) {
         String curlCommand = String.format(CF_ADD_DNS_RECORDS_API, zoneId, apiToken, domainPrefix, ipAddress);
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
-        Process process = processBuilder.start();
+        try {
+            Process process = processBuilder.start();
 
 //        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 //            String line;
@@ -193,12 +194,15 @@ public class DnsUtils {
 //            System.out.println("add ------------------" + domainPrefix + "-------------------");
 //        }
 
-        // Wait for the process to finish
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            System.out.println("Error executing addCfDnsRecords task");
-        }
+            // Wait for the process to finish
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                System.out.println("Error executing addCfDnsRecords task");
+            }
 //        System.out.println("域名：" + domainPrefix + "." + dnsCfg.getRootDomain() + " 的dns记录添加成功！ip地址：" + ipAddress);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     /**
@@ -229,7 +233,7 @@ public class DnsUtils {
 //                } catch (Exception e) {
 //                    e.printStackTrace();
 //                }
-            } catch (IOException | InterruptedException e) {
+            } catch (Exception e) {
                 e.printStackTrace();
             }
             System.out.println("√√√ 域名：" + proxyDomain + "的dns记录已清除！ √√√");

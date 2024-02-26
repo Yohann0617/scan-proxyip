@@ -44,13 +44,16 @@ public class Main implements ApplicationRunner {
      * @param outputFile  输出文件全路径
      * @throws IOException 异常
      */
-    private void addDnsRecordAndWriteToFile(List<String> ipAddresses, String outputFile) throws IOException {
+    private void addDnsRecordAndWriteToFile(List<String> ipAddresses, String outputFile) {
         List<String> countryCodeList = Arrays.stream(CountryEnum.values()).map(CountryEnum::getCode).collect(Collectors.toList());
         try (FileWriter writer = new FileWriter(outputFile)) {
             ipAddresses.parallelStream().forEach(ipAddress -> {
                 try {
-                    // Step 3: Execute curl command
+                    // 获取国家代码
                     String countryCode = DnsUtils.getIpCountry(ipAddress, dnsCfg.getGeoipAuth());
+                    if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
+                        countryCode = DnsUtils.getIpCountry(ipAddress);
+                    }
 
                     // 添加cf记录
                     if (countryCodeList.contains(countryCode)) {
@@ -58,13 +61,16 @@ public class Main implements ApplicationRunner {
                         DnsUtils.addCfDnsRecords(prefix, ipAddress, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
                     }
 
-                    // Step 4: Write IP and ISO code to file
+                    // 写入文件
                     writer.write(ipAddress + " " + (countryCode == null ? "" : countryCode) + "\n");
 
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
             });
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("写入文件：" + outputFile + "失败");
         }
 
     }
@@ -75,32 +81,26 @@ public class Main implements ApplicationRunner {
     private void updateProxyIpTask() {
         System.out.println("当前时间：" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "，开始更新DNS记录...");
         long begin = System.currentTimeMillis();
-        try {
-            // 获取proxyIps
-            List<String> ipAddresses = DnsUtils.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
+        // 获取proxyIps
+        List<String> ipAddresses = DnsUtils.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
 
-//            ipAddresses.forEach(System.out::println);
+        // 清除dns旧记录
+        rmCfDnsRecords();
+        System.out.println("√√√ 所有DNS记录已清除成功，开始添加DNS记录... √√√");
 
-            // 清除dns旧记录
-            rmCfDnsRecords();
-            System.out.println("√√√ 所有DNS记录已清除成功，开始添加DNS记录... √√√");
+        // 添加DNS记录并保存到文件
+        addDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile());
+        System.out.println("√√√ 所有DNS记录添加完成!!! √√√");
+        System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + " √√√");
 
-            // 添加DNS记录并保存到文件
-            addDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile());
-            System.out.println("√√√ 所有DNS记录添加完成!!! √√√");
-            System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + " √√√");
-
-            // 发送到网盘api
-            if (!"".equals(dnsCfg.getUploadApi())) {
-                DnsUtils.updateFileToNetDisc(dnsCfg.getOutPutFile(), dnsCfg.getUploadApi());
-            }
-
-            long end = System.currentTimeMillis();
-
-            System.out.println("总耗时：" + (end - begin) + " ms");
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+        // 发送到网盘api
+        if (!"".equals(dnsCfg.getUploadApi())) {
+            DnsUtils.updateFileToNetDisc(dnsCfg.getOutPutFile(), dnsCfg.getUploadApi());
         }
+
+        long end = System.currentTimeMillis();
+
+        System.out.println("总耗时：" + (end - begin) + " ms");
     }
 
     /**
