@@ -45,11 +45,6 @@ public class Main implements ApplicationRunner {
      * @throws IOException 异常
      */
     private void addDnsRecordAndWriteToFile(List<String> ipAddresses, String outputFile) {
-        if (ipAddresses == null || ipAddresses.size() == 0) {
-            System.out.println("ip列表为空，不执行DNS记录更新任务");
-            return;
-        }
-
         List<String> countryCodeList = Arrays.stream(CountryEnum.values()).map(CountryEnum::getCode).collect(Collectors.toList());
         try (FileWriter writer = new FileWriter(outputFile)) {
             ipAddresses.parallelStream().forEach(ipAddress -> {
@@ -97,15 +92,17 @@ public class Main implements ApplicationRunner {
             e.printStackTrace();
         }
 
-        // 清除dns旧记录
-        rmCfDnsRecords();
+        if (ipAddresses != null) {
+            // 清除dns旧记录
+            rmCfDnsRecords();
 
-        // 添加DNS记录并保存到文件
-        addDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile());
+            // 添加DNS记录并保存到文件
+            addDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile());
 
-        // 发送到网盘api
-        if (!"".equals(dnsCfg.getUploadApi())) {
-            DnsUtils.updateFileToNetDisc(dnsCfg.getOutPutFile(), dnsCfg.getUploadApi());
+            // 发送到网盘api
+            if (!"".equals(dnsCfg.getUploadApi())) {
+                DnsUtils.updateFileToNetDisc(dnsCfg.getOutPutFile(), dnsCfg.getUploadApi());
+            }
         }
 
         long end = System.currentTimeMillis();
