@@ -42,9 +42,27 @@ public class DnsUtils {
             " -H \"Authorization: Basic %s\"";
 
     /**
-     * 个人网盘地址
+     * 个人网盘api
      */
     public static String NET_DISC_API = "curl -X POST -F \"image=@%s;type=application/octet-stream\" %s";
+
+    /**
+     * 常年稳定的ip列表
+     */
+    public static List<String> RELEASE_IP_LIST = new ArrayList<String>(){
+        {
+            // 澳门电讯（常年稳定）
+            add("45.64.23.3");
+            add("45.64.23.4");
+            add("45.64.23.16");
+            add("45.64.23.17");
+            add("45.64.23.18");
+            add("45.64.23.19");
+            add("45.64.23.21");
+            add("45.64.23.22");
+            add("45.64.23.25");
+        }
+    };
 
     /**
      * 发送本地文件到个人网盘

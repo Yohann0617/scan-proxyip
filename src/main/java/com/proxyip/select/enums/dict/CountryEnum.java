@@ -22,6 +22,7 @@ public enum CountryEnum implements DictEnum {
     NL("NL", "荷兰"),
     DE("DE", "德国"),
     HK("HK", "香港"),
+    MO("MO", "澳门"),
     SG("SG", "新加坡"),
     KR("KR", "韩国"),
     JP("JP", "日本"),

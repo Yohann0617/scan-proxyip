@@ -48,8 +48,11 @@ public class Main implements ApplicationRunner {
     private void addDnsRecordAndWriteToFile(List<String> ipAddresses, String outputFile) {
         List<String> countryCodeList = Arrays.stream(CountryEnum.values()).map(CountryEnum::getCode).collect(Collectors.toList());
         try (FileWriter writer = new FileWriter(outputFile)) {
+            // 添加常年稳定的ip
+            ipAddresses.addAll(DnsUtils.RELEASE_IP_LIST);
+            // 循环异步执行
             ipAddresses.parallelStream().forEach(ipAddress -> {
-                if (NetUtils.getPingResult(ipAddress)) {
+                if (DnsUtils.RELEASE_IP_LIST.contains(ipAddress) || NetUtils.getPingResult(ipAddress)) {
                     try {
                         // 获取国家代码
                         String countryCode = DnsUtils.getIpCountry(ipAddress, dnsCfg.getGeoipAuth());
