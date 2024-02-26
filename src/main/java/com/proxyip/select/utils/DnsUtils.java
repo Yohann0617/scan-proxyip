@@ -4,7 +4,10 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.IntStream;
 
 /**
  * @projectName: select-proxyip
@@ -49,7 +52,7 @@ public class DnsUtils {
     /**
      * 常年稳定的ip列表
      */
-    public static List<String> RELEASE_IP_LIST = new ArrayList<String>(){
+    public static List<String> RELEASE_IP_LIST = new ArrayList<String>() {
         {
             // 澳门电讯（常年稳定）
             add("45.64.23.3");
@@ -99,30 +102,37 @@ public class DnsUtils {
      * @throws IOException          异常
      * @throws InterruptedException 异常
      */
-    public static List<String> resolveDomain(String domain, String dnsServer) throws IOException, InterruptedException {
-        List<String> ipAddresses = new ArrayList<>();
+    public static List<String> resolveDomain(String domain, String dnsServer) {
+        Set<String> ipAddresses = new HashSet<>();
         ProcessBuilder processBuilder = new ProcessBuilder("nslookup", domain, dnsServer);
-        Process process = processBuilder.start();
 
-        // Read the output of the command
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-            String line;
-            while ((line = reader.readLine()) != null) {
-                if (line.startsWith("Address:") && !line.contains("#")) {
-                    String ipAddress = line.substring(line.indexOf(":") + 1).trim();
-                    ipAddresses.add(ipAddress);
+        // 循环3次，避免解析不全
+        IntStream.rangeClosed(1, 3).parallel().forEach(x -> {
+            try {
+                Process process = processBuilder.start();
+                // Read the output of the command
+                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                    String line;
+                    while ((line = reader.readLine()) != null) {
+                        if (line.startsWith("Address:") && !line.contains("#")) {
+                            String ipAddress = line.substring(line.indexOf(":") + 1).trim();
+                            ipAddresses.add(ipAddress);
+                        }
+                    }
                 }
+
+                // Wait for the process to finish
+                int exitCode = process.waitFor();
+                if (exitCode != 0) {
+                    System.out.println("Error executing nslookup command");
+//                    System.exit(1);
+                }
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-        }
+        });
 
-        // Wait for the process to finish
-        int exitCode = process.waitFor();
-        if (exitCode != 0) {
-            System.out.println("Error executing nslookup command");
-//            System.exit(1);
-        }
-
-        return ipAddresses;
+        return new ArrayList<>(ipAddresses);
     }
 
     /**

@@ -93,14 +93,9 @@ public class Main implements ApplicationRunner {
         System.out.println("当前时间：" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "，开始更新DNS记录...");
         long begin = System.currentTimeMillis();
         // 获取proxyIps
-        List<String> ipAddresses = null;
-        try {
-            ipAddresses = DnsUtils.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-        }
+        List<String> ipAddresses = DnsUtils.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
 
-        if (ipAddresses != null || ipAddresses.size() != 0) {
+        if (ipAddresses.size() != 0) {
             // 清除dns旧记录
             rmCfDnsRecords();
 
