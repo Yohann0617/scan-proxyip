@@ -43,7 +43,6 @@ public class Main implements ApplicationRunner {
      *
      * @param ipAddresses ip列表
      * @param outputFile  输出文件全路径
-     * @throws IOException 异常
      */
     private void addDnsRecordAndWriteToFile(List<String> ipAddresses, String outputFile) {
         List<String> countryCodeList = Arrays.stream(CountryEnum.values()).map(CountryEnum::getCode).collect(Collectors.toList());
