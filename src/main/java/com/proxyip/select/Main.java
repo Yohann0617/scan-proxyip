@@ -92,7 +92,7 @@ public class Main implements ApplicationRunner {
             e.printStackTrace();
         }
 
-        if (ipAddresses != null) {
+        if (ipAddresses != null || ipAddresses.size() != 0) {
             // 清除dns旧记录
             rmCfDnsRecords();
 
