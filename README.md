@@ -34,7 +34,7 @@ docker run -d --net=host --restart=always \
 
 ## java -jar 直接运行
 
-安装或更新依赖包：
+### 1、安装或更新依赖包：
 
 ```bash
 yum install -y bind-utils curl epel-release \
@@ -42,7 +42,11 @@ yum install -y bind-utils curl epel-release \
 && yum clean all
 ```
 
-后台启动服务：
+### 2、修改application.yml配置文件
+
+jar包同级目录下创建`application.yml`配置文件并修改相关配置，参考源码中的`application.yml`。
+
+### 3、后台启动服务：
 
 ```bash
 nohup jar -jar select-1.0.0.jar > /var/log/scan-proxyip.log &
