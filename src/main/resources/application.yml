@@ -7,7 +7,7 @@ dns-cfg:
   # 每天8:30执行         每隔1小时执行一次："0 0 */1 * * *"
   cron: "0 30 8 * * ?"
   # DNS服务器地址：谷歌：8.8.8.8； OpenDNS：208.67.222.222或208.67.220.220； cloudflare：1.1.1.1
-  dns-server: 208.67.222.222
+  dns-server: 1.1.1.1
   proxy-domain: cdn-all.xn--b6gac.eu.org
   # 地址：https://www.maxmind.com 创建License Key ，将Account ID和License key拼接成 `Account ID:License key` 并用base64编码的结果，额度1000次查询/天，不配置默认使用免费的api（精准度一般）
   geoip-auth:
