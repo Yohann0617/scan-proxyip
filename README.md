@@ -1,4 +1,4 @@
-[中文](https://github.com/Yohann0617/scan-proxyip/blob/master/README_ZH.md) | [EN](https://github.com/Yohann0617/scan-proxyip/blob/master/README.md)
+[ZH](https://github.com/Yohann0617/scan-proxyip/blob/master/README_ZH.md) | [EN](https://github.com/Yohann0617/scan-proxyip/blob/master/README.md)
 
 # scan-proxyip
 
