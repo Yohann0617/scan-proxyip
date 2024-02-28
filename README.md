@@ -54,3 +54,6 @@ Create the `application.yml` configuration file in the same directory as the jar
 nohup jar -jar select-1.0.0.jar > /var/log/scan-proxyip.log &
 ```
 
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/Yohann0617/scan-proxyip.svg)](https://starchart.cc/Yohann0617/scan-proxyip)
