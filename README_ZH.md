@@ -1,3 +1,5 @@
+[ZH](https://github.com/Yohann0617/scan-proxyip/blob/master/README_ZH.md) | [EN](https://github.com/Yohann0617/scan-proxyip/blob/master/README.md)
+
 # scan-proxyip
 
 > 一个用来定时解析代理域名A记录的服务，解析到的proxyip会根据机房位置自动添加到Cloudflare中托管的域名DNS记录中，可以配合Cloudflare的Worker实现稳定的科学上网。目前仅支持Linux环境，支持本地Java环境直接启动，也支持Docker一键部署（arm64/amd64架构）。
