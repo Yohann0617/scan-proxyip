@@ -54,3 +54,6 @@ jar包同级目录下创建`application.yml`配置文件并修改相关配置，
 nohup jar -jar select-1.0.0.jar > /var/log/scan-proxyip.log &
 ```
 
+## Stargazers over time
+
+[![Stargazers over time](https://starchart.cc/Yohann0617/scan-proxyip.svg)](https://starchart.cc/Yohann0617/scan-proxyip)
