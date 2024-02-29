@@ -1,5 +1,6 @@
 package com.proxyip.select;
 
+import com.proxyip.select.bean.IpWithCountryCode;
 import com.proxyip.select.config.CloudflareCfg;
 import com.proxyip.select.config.DnsCfg;
 import com.proxyip.select.enums.EnumUtils;
@@ -16,8 +17,8 @@ import javax.annotation.Resource;
 import java.io.*;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.stream.Collectors;
 
 /**
@@ -37,6 +38,66 @@ public class Main implements ApplicationRunner {
     private CloudflareCfg cloudflareCfg;
     @Resource
     private TaskScheduler taskScheduler;
+
+    /**
+     * 添加dns记录并将ip地址写入文件
+     * 每个国家5条dns记录
+     *
+     * @param ipAddresses ip列表
+     * @param outputFile  输出文件全路径
+     */
+    private void addLimitDnsRecordAndWriteToFile(List<String> ipAddresses, String outputFile) {
+        List<String> countryCodeList = Arrays.stream(CountryEnum.values()).map(CountryEnum::getCode).collect(Collectors.toList());
+        // 添加常年稳定的ip
+        ipAddresses.addAll(DnsUtils.RELEASE_IP_LIST);
+        List<IpWithCountryCode> list = new ArrayList<>();
+        StringBuffer sb = new StringBuffer();
+        ipAddresses.parallelStream().forEach(ip -> {
+            // 获取国家代码
+            String countryCode = DnsUtils.getIpCountry(ip, dnsCfg.getGeoipAuth());
+            if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
+                countryCode = DnsUtils.getIpCountry(ip);
+            }
+            if (countryCode != null) {
+                list.add(new IpWithCountryCode(ip, countryCode));
+            }
+        });
+
+        Map<String, List<IpWithCountryCode>> ipGroupByCountryMap = list.parallelStream()
+                .filter(x -> NetUtils.getPingResult(x.getIp()))
+                .sorted(Comparator.comparing(IpWithCountryCode::getIp))
+                .collect(Collectors.groupingBy(
+                        IpWithCountryCode::getCountry,
+                        Collectors.collectingAndThen(
+                                Collectors.toList(),
+                                subList -> new ArrayList<>(subList.subList(0, Math.min(5, subList.size())))
+                        )));
+
+        ipGroupByCountryMap.forEach((country, ipList) -> {
+            sb.append(country).append(":").append("\n");
+            ipList.forEach(x -> {
+                sb.append("\t").append(x.getIp()).append("\n");
+                // 添加cf记录
+                CompletableFuture.runAsync(() -> {
+                    if (countryCodeList.contains(x.getCountry())) {
+                        String prefix = EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
+                        DnsUtils.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+                    }
+                });
+            });
+            sb.append("\n");
+        });
+        System.out.println("√√√ 所有DNS记录添加完成!!! √√√");
+
+        // 写入文件
+        try (FileWriter writer = new FileWriter(outputFile)) {
+            writer.write(sb.toString());
+        } catch (Exception e) {
+            e.printStackTrace();
+            throw new RuntimeException("写入文件：" + outputFile + "失败");
+        }
+        System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + " √√√");
+    }
 
     /**
      * 添加dns记录并将ip地址写入文件
@@ -99,7 +160,7 @@ public class Main implements ApplicationRunner {
             rmCfDnsRecords();
 
             // 添加DNS记录并保存到文件
-            addDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile());
+            addLimitDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile());
 
             // 发送到网盘api
             if (!"".equals(dnsCfg.getUploadApi())) {
