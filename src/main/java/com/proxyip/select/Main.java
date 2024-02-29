@@ -70,7 +70,6 @@ public class Main implements ApplicationRunner {
                     }
                     return NetUtils.getPingResult(x.getIp());
                 })
-                .sorted(Comparator.comparing(IpWithCountryCode::getIp))
                 .collect(Collectors.groupingBy(
                         IpWithCountryCode::getCountry,
                         Collectors.collectingAndThen(
@@ -80,15 +79,13 @@ public class Main implements ApplicationRunner {
 
         ipGroupByCountryMap.forEach((country, ipList) -> {
             sb.append(country).append(":").append("\n");
-            ipList.forEach(x -> {
+            ipList.parallelStream().forEach(x -> {
                 sb.append("\t").append(x.getIp()).append("\n");
                 // 添加cf记录
-                CompletableFuture.runAsync(() -> {
-                    if (countryCodeList.contains(x.getCountry())) {
-                        String prefix = EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
-                        DnsUtils.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
-                    }
-                });
+                if (countryCodeList.contains(x.getCountry())) {
+                    String prefix = EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
+                    DnsUtils.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+                }
             });
             sb.append("\n");
         });
