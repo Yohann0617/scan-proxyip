@@ -86,25 +86,27 @@ public class Main implements ApplicationRunner {
         System.out.println("√√√ 所有DNS记录添加完成!!! √√√");
 
         // 写入文件
-        try (FileWriter writer = new FileWriter(outputFile)) {
-            ipGroupByCountryMap.forEach((country, ipList) -> {
-                String ipStr = ipList.parallelStream().map(x -> "\t" + x.getIp()).collect(Collectors.joining("\n"));
-                try {
-                    writer.write(country + ":\n" + ipStr + "\n");
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
-            });
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new RuntimeException("写入文件：" + outputFile + "失败");
-        }
-        System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + " √√√");
+        CompletableFuture.runAsync(() -> {
+            try (FileWriter writer = new FileWriter(outputFile)) {
+                ipGroupByCountryMap.forEach((country, ipList) -> {
+                    String ipStr = ipList.parallelStream().map(x -> "\t" + x.getIp()).collect(Collectors.joining("\n"));
+                    try {
+                        writer.write(country + ":\n" + ipStr + "\n");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        throw new RuntimeException("写入文件：" + outputFile + "失败");
+                    }
+                });
+            } catch (Exception e) {
+                throw new RuntimeException("写入文件：" + outputFile + "失败");
+            }
+            System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + " √√√");
 
-        // 发送到网盘api
-        if (!"".equals(dnsCfg.getUploadApi())) {
-            DnsUtils.uploadFileToNetDisc(dnsCfg.getOutPutFile(), dnsCfg.getUploadApi());
-        }
+            // 发送到网盘api
+            if (!"".equals(dnsCfg.getUploadApi())) {
+                DnsUtils.uploadFileToNetDisc(dnsCfg.getOutPutFile(), dnsCfg.getUploadApi());
+            }
+        });
     }
 
     /**
@@ -173,7 +175,7 @@ public class Main implements ApplicationRunner {
 
         long end = System.currentTimeMillis();
 
-        System.out.println("总耗时：" + (end - begin) + " ms");
+        System.out.println("√√√ 更新DNS记录任务完成!!!总耗时：" + (end - begin) + " ms √√√");
     }
 
     /**
