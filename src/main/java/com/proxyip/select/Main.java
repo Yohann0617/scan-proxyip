@@ -64,7 +64,12 @@ public class Main implements ApplicationRunner {
         });
 
         Map<String, List<IpWithCountryCode>> ipGroupByCountryMap = list.parallelStream()
-                .filter(x -> NetUtils.getPingResult(x.getIp()))
+                .filter(x -> {
+                    if (DnsUtils.RELEASE_IP_LIST.contains(x.getIp())) {
+                        return true;
+                    }
+                    return NetUtils.getPingResult(x.getIp());
+                })
                 .sorted(Comparator.comparing(IpWithCountryCode::getIp))
                 .collect(Collectors.groupingBy(
                         IpWithCountryCode::getCountry,
