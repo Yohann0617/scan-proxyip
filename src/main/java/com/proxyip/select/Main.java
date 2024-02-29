@@ -50,18 +50,14 @@ public class Main implements ApplicationRunner {
         List<String> countryCodeList = Arrays.stream(CountryEnum.values()).map(CountryEnum::getCode).collect(Collectors.toList());
         // 添加常年稳定的ip
         ipAddresses.addAll(DnsUtils.RELEASE_IP_LIST);
-        List<IpWithCountryCode> list = new ArrayList<>();
-        StringBuffer sb = new StringBuffer();
-        ipAddresses.parallelStream().forEach(ip -> {
+        List<IpWithCountryCode> list = ipAddresses.parallelStream().map(ip -> {
             // 获取国家代码
             String countryCode = DnsUtils.getIpCountry(ip, dnsCfg.getGeoipAuth());
             if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
                 countryCode = DnsUtils.getIpCountry(ip);
             }
-            if (countryCode != null) {
-                list.add(new IpWithCountryCode(ip, countryCode));
-            }
-        });
+            return new IpWithCountryCode(ip, countryCode);
+        }).collect(Collectors.toList());
 
         Map<String, List<IpWithCountryCode>> ipGroupByCountryMap = list.parallelStream()
                 .filter(x -> {
@@ -77,28 +73,38 @@ public class Main implements ApplicationRunner {
                                 subList -> new ArrayList<>(subList.subList(0, Math.min(5, subList.size())))
                         )));
 
-        ipGroupByCountryMap.forEach((country, ipList) -> {
-            sb.append(country).append(":").append("\n");
-            ipList.parallelStream().forEach(x -> {
-                sb.append("\t").append(x.getIp()).append("\n");
-                // 添加cf记录
-                if (countryCodeList.contains(x.getCountry())) {
-                    String prefix = EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
-                    DnsUtils.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
-                }
-            });
-            sb.append("\n");
+        // 添加cf记录
+        ipGroupByCountryMap.values().stream()
+                .flatMap(List::stream)
+                .collect(Collectors.toList())
+                .parallelStream().forEach(x -> {
+            if (countryCodeList.contains(x.getCountry())) {
+                String prefix = EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
+                DnsUtils.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+            }
         });
         System.out.println("√√√ 所有DNS记录添加完成!!! √√√");
 
         // 写入文件
         try (FileWriter writer = new FileWriter(outputFile)) {
-            writer.write(sb.toString());
+            ipGroupByCountryMap.forEach((country, ipList) -> {
+                String ipStr = ipList.parallelStream().map(x -> "\t" + x.getIp()).collect(Collectors.joining("\n"));
+                try {
+                    writer.write(country + ":\n" + ipStr + "\n");
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            });
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("写入文件：" + outputFile + "失败");
         }
         System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + " √√√");
+
+        // 发送到网盘api
+        if (!"".equals(dnsCfg.getUploadApi())) {
+            DnsUtils.uploadFileToNetDisc(dnsCfg.getOutPutFile(), dnsCfg.getUploadApi());
+        }
     }
 
     /**
@@ -163,11 +169,6 @@ public class Main implements ApplicationRunner {
 
             // 添加DNS记录并保存到文件
             addLimitDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile());
-
-            // 发送到网盘api
-            if (!"".equals(dnsCfg.getUploadApi())) {
-                DnsUtils.uploadFileToNetDisc(dnsCfg.getOutPutFile(), dnsCfg.getUploadApi());
-            }
         }
 
         long end = System.currentTimeMillis();
