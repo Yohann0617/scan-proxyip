@@ -1,8 +1,5 @@
 server:
   port: 8017
-spring:
-  main:
-    banner-mode: off
 
 dns-cfg:
   # 服务启动立马执行一次DNS记录更新任务
