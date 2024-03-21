@@ -41,7 +41,7 @@ public class Main implements ApplicationRunner {
     private void updateProxyIpTask() {
         LocalDateTime now = LocalDateTime.now();
         String datetime = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        String date = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+        String date = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
         System.out.println("当前时间：" + datetime + "，开始更新DNS记录...");
         long begin = System.currentTimeMillis();
         // 获取proxyIps

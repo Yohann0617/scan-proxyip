@@ -92,11 +92,11 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
             } catch (Exception e) {
                 throw new RuntimeException("写入文件：" + outputFile + "失败");
             }
-            System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + " √√√");
+            System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + outputFile + " √√√");
 
             // 发送到网盘api
             if (!"".equals(dnsCfg.getUploadApi())) {
-                DnsUtils.uploadFileToNetDisc(dnsCfg.getOutPutFile(), dnsCfg.getUploadApi());
+                DnsUtils.uploadFileToNetDisc(outputFile, dnsCfg.getUploadApi());
             }
         });
     }
@@ -136,7 +136,12 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
             });
 
             System.out.println("√√√ 所有DNS记录添加完成!!! √√√");
-            System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + dnsCfg.getOutPutFile() + " √√√");
+            System.out.println("√√√ 获取proxyIps任务完成，文件位置：" + outputFile + " √√√");
+
+            // 发送到网盘api
+            if (!"".equals(dnsCfg.getUploadApi())) {
+                DnsUtils.uploadFileToNetDisc(outputFile, dnsCfg.getUploadApi());
+            }
         } catch (Exception e) {
             e.printStackTrace();
             throw new RuntimeException("写入文件：" + outputFile + "失败");
