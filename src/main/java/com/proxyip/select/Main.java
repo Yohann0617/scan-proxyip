@@ -48,8 +48,9 @@ public class Main implements ApplicationRunner {
      */
     private void addLimitDnsRecordAndWriteToFile(List<String> ipAddresses, String outputFile) {
         List<String> countryCodeList = Arrays.stream(CountryEnum.values()).map(CountryEnum::getCode).collect(Collectors.toList());
+        List<String> releaseIps = dnsCfg.getReleaseIps();
         // 添加常年稳定的ip
-        ipAddresses.addAll(DnsUtils.RELEASE_IP_LIST);
+        ipAddresses.addAll(releaseIps);
         List<IpWithCountryCode> list = ipAddresses.parallelStream().map(ip -> {
             // 获取国家代码
             String countryCode = DnsUtils.getIpCountry(ip, dnsCfg.getGeoipAuth());
@@ -61,7 +62,7 @@ public class Main implements ApplicationRunner {
 
         Map<String, List<IpWithCountryCode>> ipGroupByCountryMap = list.parallelStream()
                 .filter(x -> {
-                    if (DnsUtils.RELEASE_IP_LIST.contains(x.getIp())) {
+                    if (releaseIps.contains(x.getIp())) {
                         return true;
                     }
                     return NetUtils.getPingResult(x.getIp());
@@ -117,12 +118,13 @@ public class Main implements ApplicationRunner {
      */
     private void addDnsRecordAndWriteToFile(List<String> ipAddresses, String outputFile) {
         List<String> countryCodeList = Arrays.stream(CountryEnum.values()).map(CountryEnum::getCode).collect(Collectors.toList());
+        List<String> releaseIps = dnsCfg.getReleaseIps();
         try (FileWriter writer = new FileWriter(outputFile)) {
             // 添加常年稳定的ip
-            ipAddresses.addAll(DnsUtils.RELEASE_IP_LIST);
+            ipAddresses.addAll(releaseIps);
             // 循环异步执行
             ipAddresses.parallelStream().forEach(ipAddress -> {
-                if (DnsUtils.RELEASE_IP_LIST.contains(ipAddress) || NetUtils.getPingResult(ipAddress)) {
+                if (releaseIps.contains(ipAddress) || NetUtils.getPingResult(ipAddress)) {
                     try {
                         // 获取国家代码
                         String countryCode = DnsUtils.getIpCountry(ipAddress, dnsCfg.getGeoipAuth());

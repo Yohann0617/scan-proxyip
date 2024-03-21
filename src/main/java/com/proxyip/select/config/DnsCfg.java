@@ -3,6 +3,8 @@ package com.proxyip.select.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.List;
+
 /**
  * <p>
  * DnsConfig
@@ -22,6 +24,15 @@ public class DnsCfg {
     private String geoipAuth;
     private String outPutFile;
     private String uploadApi;
+    private List<String> releaseIps;
+
+    public List<String> getReleaseIps() {
+        return releaseIps;
+    }
+
+    public void setReleaseIps(List<String> releaseIps) {
+        this.releaseIps = releaseIps;
+    }
 
     public Boolean getPowerOnExec() {
         return powerOnExec;
