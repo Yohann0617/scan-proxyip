@@ -39,10 +39,7 @@ public class Main implements ApplicationRunner {
      * 更新dns记录任务
      */
     private void updateProxyIpTask() {
-        LocalDateTime now = LocalDateTime.now();
-        String datetime = now.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
-        String date = now.format(DateTimeFormatter.ofPattern("yyyyMMdd"));
-        System.out.println("当前时间：" + datetime + "，开始更新DNS记录...");
+        System.out.println("当前时间：" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "，开始更新DNS记录...");
         long begin = System.currentTimeMillis();
         // 获取proxyIps
         List<String> ipAddresses = DnsUtils.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
@@ -52,7 +49,7 @@ public class Main implements ApplicationRunner {
             dnsRecordService.rmCfDnsRecords();
 
             // 添加DNS记录并保存到文件
-            dnsRecordService.addLimitDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile() + "_" + date);
+            dnsRecordService.addLimitDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile());
         }
 
         long end = System.currentTimeMillis();
