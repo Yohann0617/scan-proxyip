@@ -78,18 +78,15 @@ public class DnsUtils {
     /**
      * 解析域名
      *
-     * @param domain    域名
-     * @param dnsServer 域名解析服务器地址
+     * @param domainList 域名列表
+     * @param dnsServer  域名解析服务器地址
      * @return 解析后的ip地址
-     * @throws IOException          异常
-     * @throws InterruptedException 异常
      */
-    public static List<String> resolveDomain(String domain, String dnsServer) {
+    public static List<String> resolveDomain(List<String> domainList, String dnsServer) {
         Set<String> ipAddresses = new HashSet<>();
-        ProcessBuilder processBuilder = new ProcessBuilder("nslookup", domain, dnsServer);
+        domainList.stream().parallel().forEach(domain -> {
+            ProcessBuilder processBuilder = new ProcessBuilder("nslookup", domain, dnsServer);
 
-        // 循环3次，避免解析不全
-        IntStream.rangeClosed(1, 3).parallel().forEach(x -> {
             try {
                 Process process = processBuilder.start();
                 // Read the output of the command

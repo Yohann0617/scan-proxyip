@@ -28,7 +28,6 @@ docker run -d --net=host --restart=always \
 -e dns-cfg.power-on-exec='true' \
 -e dns-cfg.cron='0 30 8 * * ?' \
 -e dns-cfg.dns-server='1.1.1.1' \
--e dns-cfg.proxy-domain='xxx' \
 -e dns-cfg.geoip-auth='xxx' \
 -e dns-cfg.upload-api='https://abc.com/api' \
 --name proxyip yohannfan/yohann-proxyip:latest

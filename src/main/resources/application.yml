@@ -1,6 +1,15 @@
 server:
   port: 8017
 
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:scan.db
+    druid:
+      pool-prepared-statements: false
+      max-pool-prepared-statement-per-connection-size: -1
+
 dns-cfg:
   # 服务启动立马执行一次DNS记录更新任务
   power-on-exec: false
@@ -8,7 +17,9 @@ dns-cfg:
   cron: "0 30 8 * * ?"
   # DNS服务器地址：谷歌：8.8.8.8； OpenDNS：208.67.222.222或208.67.220.220； cloudflare：1.1.1.1
   dns-server: 1.1.1.1
-  proxy-domain: cdn-all.xn--b6gac.eu.org
+  proxy-domain:
+    - cdn-all.xn--b6gac.eu.org
+    - cdn-all.xijingping.link
   # 地址：https://www.maxmind.com 创建License Key ，将Account ID和License key拼接成 `Account ID:License key` 并用base64编码的结果，额度1000次查询/天，不配置默认使用免费的api（精准度一般）
   geoip-auth:
   out-put-file: /app/proxyIps.conf
@@ -36,3 +47,8 @@ cloudflare-cfg:
   root-domain:
   # 优选ip域名前缀
   proxy-domain-prefix:
+
+snow:
+  id:
+    worker-id: 0
+    datacenter-id: 0
