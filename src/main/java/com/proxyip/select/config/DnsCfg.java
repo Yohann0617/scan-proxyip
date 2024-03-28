@@ -20,11 +20,19 @@ public class DnsCfg {
     private Boolean powerOnExec;
     private String cron;
     private String dnsServer;
-    private String proxyDomain;
+    private List<String> proxyDomain;
     private String geoipAuth;
     private String outPutFile;
     private String uploadApi;
     private List<String> releaseIps;
+
+    public List<String> getProxyDomain() {
+        return proxyDomain;
+    }
+
+    public void setProxyDomain(List<String> proxyDomain) {
+        this.proxyDomain = proxyDomain;
+    }
 
     public List<String> getReleaseIps() {
         return releaseIps;
@@ -62,20 +70,12 @@ public class DnsCfg {
         this.dnsServer = dnsServer;
     }
 
-    public void setProxyDomain(String proxyDomain) {
-        this.proxyDomain = proxyDomain;
-    }
-
     public void setGeoipAuth(String geoipAuth) {
         this.geoipAuth = geoipAuth;
     }
 
     public String getDnsServer() {
         return dnsServer;
-    }
-
-    public String getProxyDomain() {
-        return proxyDomain;
     }
 
     public String getGeoipAuth() {
