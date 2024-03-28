@@ -1,5 +1,6 @@
 package com.proxyip.select.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.proxyip.select.bean.IpWithCountryCode;
 import com.proxyip.select.bean.ProxyIp;
 import com.proxyip.select.config.CloudflareCfg;
@@ -64,12 +65,22 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
                     proxyIp.setId(String.valueOf(idGen.nextId()));
                     proxyIp.setCountry(countryCode);
                     proxyIp.setIp(ip);
-                    proxyIp.setPingValue(NetUtils.getPingValue(ip));
+                    Integer pingValue = NetUtils.getPingValue(ip);
+                    proxyIp.setPingValue(pingValue == null ? 999999 : pingValue);
                     return proxyIp;
                 }).collect(Collectors.toList());
 
         // 持久化到数据库
-        CompletableFuture.runAsync(() -> proxyIpService.saveBatch(list));
+        CompletableFuture.runAsync(() -> {
+            List<String> ipInDbList = proxyIpService.listObjs(new LambdaQueryWrapper<ProxyIp>()
+                    .select(ProxyIp::getIp), String::valueOf);
+            list.forEach(x -> {
+                if (ipInDbList.contains(x.getIp())) {
+                    list.remove(x);
+                }
+            });
+            proxyIpService.saveBatch(list);
+        });
 
         // 分组并保留五条记录
         Map<String, List<ProxyIp>> ipGroupByCountryMap = list.parallelStream()

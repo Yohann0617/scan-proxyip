@@ -48,6 +48,6 @@ public class NetUtils {
         } catch (IOException e) {
             System.out.println("Error occurred: " + e.getMessage());
         }
-        return pingValue == null || "".equals(pingValue) ? null : Integer.parseInt(pingValue);
+        return pingValue == null || "".equals(pingValue) ? null : Double.valueOf(pingValue).intValue();
     }
 }

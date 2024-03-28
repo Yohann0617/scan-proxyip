@@ -77,15 +77,15 @@ public class Main implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-//        // 校验参数
-//        checkCfg();
-//
-//        if (dnsCfg.getPowerOnExec()) {
-//            // 服务启动立马执行一次
-//            updateProxyIpTask();
-//        }
-//
-//        // 执行定时任务
-//        taskScheduler.schedule(this::updateProxyIpTask, new CronTrigger(dnsCfg.getCron()));
+        // 校验参数
+        checkCfg();
+
+        if (dnsCfg.getPowerOnExec()) {
+            // 服务启动立马执行一次
+            updateProxyIpTask();
+        }
+
+        // 执行定时任务
+        taskScheduler.schedule(this::updateProxyIpTask, new CronTrigger(dnsCfg.getCron()));
     }
 }
