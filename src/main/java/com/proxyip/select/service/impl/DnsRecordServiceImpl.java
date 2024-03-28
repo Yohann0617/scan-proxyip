@@ -74,11 +74,7 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
         CompletableFuture.runAsync(() -> {
             List<String> ipInDbList = proxyIpService.listObjs(new LambdaQueryWrapper<ProxyIp>()
                     .select(ProxyIp::getIp), String::valueOf);
-            list.forEach(x -> {
-                if (ipInDbList.contains(x.getIp())) {
-                    list.remove(x);
-                }
-            });
+            list.removeIf(x -> ipInDbList.contains(x.getIp()));
             proxyIpService.saveBatch(list);
         });
 
@@ -100,11 +96,12 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
                 .flatMap(List::stream)
                 .collect(Collectors.toList())
                 .parallelStream().forEach(x -> {
-            if (countryCodeList.contains(x.getCountry())) {
-                String prefix = EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
-                DnsUtils.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
-            }
-        });
+                    if (countryCodeList.contains(x.getCountry())) {
+                        String prefix =
+                                EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
+                        DnsUtils.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+                    }
+                });
         System.out.println("√√√ 所有DNS记录添加完成!!! √√√");
 
         // 写入文件
@@ -150,7 +147,8 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
 
                         // 添加cf记录
                         if (countryCodeList.contains(countryCode)) {
-                            String prefix = EnumUtils.getEnumByCode(CountryEnum.class, countryCode).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
+                            String prefix =
+                                    EnumUtils.getEnumByCode(CountryEnum.class, countryCode).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
                             DnsUtils.addCfDnsRecords(prefix, ipAddress, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
                         }
 
