@@ -27,6 +27,9 @@ WORKDIR /app
 # 从第一阶段复制构建的jar文件
 COPY --from=builder /app/select-1.0.3.jar .
 
+# 拷贝数据库文件
+COPY scan.db .
+
 # 暴露应用的端口
 EXPOSE 8017
 
