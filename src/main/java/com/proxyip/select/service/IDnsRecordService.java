@@ -33,4 +33,9 @@ public interface IDnsRecordService {
      * 清除dns旧记录
      */
     void rmCfDnsRecords();
+
+    /**
+     * 清除数据库中无效的ip
+     */
+    void rmIpInDb();
 }

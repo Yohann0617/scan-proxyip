@@ -9,6 +9,7 @@ import com.proxyip.select.enums.EnumUtils;
 import com.proxyip.select.enums.dict.CountryEnum;
 import com.proxyip.select.service.IDnsRecordService;
 import com.proxyip.select.service.IProxyIpService;
+import com.proxyip.select.utils.CommonUtils;
 import com.proxyip.select.utils.DnsUtils;
 import com.proxyip.select.utils.IdGen;
 import com.proxyip.select.utils.NetUtils;
@@ -72,9 +73,14 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
 
         // 持久化到数据库
         CompletableFuture.runAsync(() -> {
+            // 删除数据库中无效ip
+            rmIpInDb();
+
             List<String> ipInDbList = proxyIpService.listObjs(new LambdaQueryWrapper<ProxyIp>()
                     .select(ProxyIp::getIp), String::valueOf);
-            list.removeIf(x -> ipInDbList.contains(x.getIp()));
+            if (CommonUtils.isNotEmpty(ipInDbList)) {
+                list.removeIf(x -> ipInDbList.contains(x.getIp()));
+            }
             proxyIpService.saveBatch(list);
         });
 
@@ -183,5 +189,17 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
                 .collect(Collectors.toList());
         DnsUtils.removeCfDnsRecords(proxyDomainList, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
         System.out.println("√√√ 所有DNS记录已清除成功，开始添加DNS记录... √√√");
+    }
+
+    @Override
+    public void rmIpInDb() {
+        List<String> voidIdList = Optional.ofNullable(proxyIpService.list())
+                .filter(CommonUtils::isNotEmpty).orElseGet(Collections::emptyList).stream()
+                .filter(x -> !NetUtils.getPingResult(x.getIp()))
+                .map(ProxyIp::getId)
+                .collect(Collectors.toList());
+        if (CommonUtils.isNotEmpty(voidIdList)) {
+            proxyIpService.removeByIds(voidIdList);
+        }
     }
 }
