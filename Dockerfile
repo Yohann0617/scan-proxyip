@@ -6,11 +6,11 @@ WORKDIR /app
 
 # 复制Maven项目描述文件和依赖清单
 COPY pom.xml .
-COPY src ./src
+COPY . .
 
 # 执行Maven构建并将构建的jar文件复制到指定目录
 RUN mvn clean package -DskipTests \
-    && cp target/select-1.0.3.jar /app/select-1.0.3.jar
+    && cp foreign-server/target/foreign-server-1.0.3.jar /app/foreign-server-1.0.3.jar
 
 # 支持AMD、ARM两种架构的镜像
 FROM dragonwell-registry.cn-hangzhou.cr.aliyuncs.com/dragonwell/dragonwell:8-centos
@@ -25,7 +25,7 @@ RUN yum install -y bind-utils curl epel-release \
 WORKDIR /app
 
 # 从第一阶段复制构建的jar文件
-COPY --from=builder /app/select-1.0.3.jar .
+COPY --from=builder /app/foreign-server-1.0.3.jar .
 
 # 拷贝数据库文件
 COPY scan.db .
@@ -34,4 +34,4 @@ COPY scan.db .
 EXPOSE 8017
 
 # 定义启动命令
-CMD ["java", "-jar", "select-1.0.3.jar"]
+CMD ["java", "-jar", "foreign-server-1.0.3.jar"]
