@@ -18,9 +18,14 @@ Parameter introduction:
 - `dns-cfg.proxy-domain`: proxy domain name.
 - `dns-cfg.upload-api`: personal network disk api. (can not be configured)
 - `dns-cfg.geoip-auth`: token created by GeoIP2. (No need to configure) Address: [https://www.maxmind.com](https://www.maxmind.com) Create a License Key, splice the Account ID and License key into `Account ID:License key` and use base64 Encoding results, quota is 1000 queries/day, if not configured, the free API will be used by default (average accuracy)
+```bash
+# create a mount database file
+mkdir -p /root/proxyip && touch /root/proxyip/scan.db
+```
 
 ```bash
 docker run -d --net=host --restart=always \
+-v /root/proxyip/scan.db:/app/scan.db \
 -e cloudflare-cfg.api-token='xxx' \
 -e cloudflare-cfg.proxy-domain-prefix='proxyip' \
 -e cloudflare-cfg.root-domain='abc.com' \

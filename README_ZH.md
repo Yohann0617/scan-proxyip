@@ -18,9 +18,14 @@
 - `dns-cfg.proxy-domain`：代理域名。
 - `dns-cfg.upload-api`：个人网盘api。（可以不配置）
 - `dns-cfg.geoip-auth`：GeoIP2创建的token。（可以不配置）地址：[https://www.maxmind.com](https://www.maxmind.com) 创建License Key ，将Account ID和License key拼接成 `Account ID:License key` 并用base64编码的结果，额度1000次查询/天，不配置默认使用免费的api（精准度一般）
+```bash
+# 创建挂载数据库文件
+mkdir -p /root/proxyip && touch /root/proxyip/scan.db
+```
 
 ```bash
 docker run -d --net=host --restart=always \
+-v /root/proxyip/scan.db:/app/scan.db \
 -e cloudflare-cfg.api-token='xxx' \
 -e cloudflare-cfg.proxy-domain-prefix='proxyip' \
 -e cloudflare-cfg.root-domain='abc.com' \
