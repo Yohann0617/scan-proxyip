@@ -86,6 +86,7 @@ public class Main implements ApplicationRunner {
         }
 
         // 执行定时任务
+        taskScheduler.schedule(dnsRecordService::rmIpInDb, new CronTrigger("0 0 0 * * ?"));
         taskScheduler.schedule(this::updateProxyIpTask, new CronTrigger(dnsCfg.getCron()));
     }
 }

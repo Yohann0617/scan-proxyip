@@ -66,16 +66,14 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
                     proxyIp.setId(String.valueOf(idGen.nextId()));
                     proxyIp.setCountry(countryCode);
                     proxyIp.setIp(ip);
-                    Integer pingValue = NetUtils.getPingValue(ip);
-                    proxyIp.setPingValue(pingValue == null ? 999999 : pingValue);
+                    // TODO: 2024/3/29 由于VPS在guo外，所以这里保存ping值无意义，应该由guo内的服务器去ping
+//                    Integer pingValue = NetUtils.getPingValue(ip);
+//                    proxyIp.setPingValue(pingValue == null ? 999999 : pingValue);
                     return proxyIp;
                 }).collect(Collectors.toList());
 
         // 持久化到数据库
         CompletableFuture.runAsync(() -> {
-            // 删除数据库中无效ip
-            rmIpInDb();
-
             List<String> ipInDbList = proxyIpService.listObjs(new LambdaQueryWrapper<ProxyIp>()
                     .select(ProxyIp::getIp), String::valueOf);
             if (CommonUtils.isNotEmpty(ipInDbList)) {
@@ -92,7 +90,7 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
                                 Collectors.toList(),
                                 subList -> {
                                     // 根据ping值排序
-                                    subList.sort(Comparator.comparing(ProxyIp::getPingValue));
+//                                    subList.sort(Comparator.comparing(ProxyIp::getPingValue));
                                     return new ArrayList<>(subList.subList(0, Math.min(5, subList.size())));
                                 }
                         )));
