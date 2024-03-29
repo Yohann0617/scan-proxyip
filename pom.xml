@@ -5,10 +5,11 @@
     <groupId>com.proxyip</groupId>
     <artifactId>select</artifactId>
     <packaging>pom</packaging>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <modules>
         <module>common</module>
         <module>foreign-server</module>
+        <module>domestic-server</module>
     </modules>
     <name>select</name>
     <description>select proxyip</description>
