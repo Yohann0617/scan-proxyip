@@ -1,27 +1,30 @@
-package com.proxyip.select.utils;
+package com.proxyip.select.service.impl;
+
+import com.proxyip.select.service.IApiService;
+import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
-import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.IntStream;
 
 /**
- * @projectName: select-proxyip
- * @package: com.proxyip.select.utils
- * @className: DnsUtils
- * @author: Yohann
- * @date: 2024/2/23 23:51
+ * <p>
+ * ApiServiceImpl
+ * </p >
+ *
+ * @author yuhui.fan
+ * @since 2024/3/29 13:57
  */
-public class DnsUtils {
+@Service
+public class ApiServiceImpl implements IApiService {
 
     /**
      * cf添加dns记录api
      */
-    public static final String CF_ADD_DNS_RECORDS_API = "curl -X POST \"https://api.cloudflare.com/client/v4/zones/%s/dns_records\"" +
+    private static final String CF_ADD_DNS_RECORDS_API = "curl -X POST \"https://api.cloudflare.com/client/v4/zones/%s/dns_records\"" +
             "     -H \"Authorization: Bearer %s\" " +
             "     -H \"Content-Type: application/json\" " +
             "     --data '{\"type\":\"A\",\"name\":\"%s\",\"content\":\"%s\",\"proxied\":false}'";
@@ -29,7 +32,7 @@ public class DnsUtils {
     /**
      * cf删除所有dns记录api
      */
-    public static String CF_REMOVE_DNS_RECORDS_API = "curl -X GET \"https://api.cloudflare.com/client/v4/zones/%s/dns_records?type=A&name=%s\" " +
+    private static String CF_REMOVE_DNS_RECORDS_API = "curl -X GET \"https://api.cloudflare.com/client/v4/zones/%s/dns_records?type=A&name=%s\" " +
             "     -H \"Authorization: Bearer %s\" " +
             "     -H \"Content-Type: application/json\" | " +
             "jq -c '.result[] | .id' | " +
@@ -40,22 +43,17 @@ public class DnsUtils {
     /**
      * 获取ip归属国家api
      */
-    public static String GET_IP_LOCATION_API = "curl \"https://api.iplocation.net/?cmd=ip-country&ip=%s\"";
-    public static String GET_GEO_IP_LOCATION_API = "curl \"https://geolite.info/geoip/v2.1/country/%s\"" +
+    private static String GET_IP_LOCATION_API = "curl \"https://api.iplocation.net/?cmd=ip-country&ip=%s\"";
+    private static String GET_GEO_IP_LOCATION_API = "curl \"https://geolite.info/geoip/v2.1/country/%s\"" +
             " -H \"Authorization: Basic %s\"";
 
     /**
      * 个人网盘api
      */
-    public static String NET_DISC_API = "curl -X POST -F \"image=@%s;type=application/octet-stream\" %s";
+    private static String NET_DISC_API = "curl -X POST -F \"image=@%s;type=application/octet-stream\" %s";
 
-    /**
-     * 发送本地文件到个人网盘
-     *
-     * @param filePath   本地文件全路径
-     * @param apiAddress 网盘api地址
-     */
-    public static void uploadFileToNetDisc(String filePath, String apiAddress) {
+    @Override
+    public void uploadFileToNetDisc(String filePath, String apiAddress) {
         String curlCommand = String.format(NET_DISC_API, filePath, apiAddress);
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
         try {
@@ -75,14 +73,8 @@ public class DnsUtils {
         }
     }
 
-    /**
-     * 解析域名
-     *
-     * @param domainList 域名列表
-     * @param dnsServer  域名解析服务器地址
-     * @return 解析后的ip地址
-     */
-    public static List<String> resolveDomain(List<String> domainList, String dnsServer) {
+    @Override
+    public List<String> resolveDomain(List<String> domainList, String dnsServer) {
         Set<String> ipAddresses = new HashSet<>();
         domainList.stream().parallel().forEach(domain -> {
             ProcessBuilder processBuilder = new ProcessBuilder("nslookup", domain, dnsServer);
@@ -114,13 +106,8 @@ public class DnsUtils {
         return new ArrayList<>(ipAddresses);
     }
 
-    /**
-     * 获取ip地址归属国家
-     *
-     * @param ipAddress ip地址
-     * @return 国家代码（例如：香港-HK）
-     */
-    public static String getIpCountry(String ipAddress) {
+    @Override
+    public String getIpCountry(String ipAddress) {
         String curlCommand = String.format(GET_IP_LOCATION_API, ipAddress);
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
         String country = null;
@@ -144,14 +131,8 @@ public class DnsUtils {
         return country;
     }
 
-    /**
-     * 获取ip地址归属国家（Geoip2）（更精准）（有限额：一天1000次查询）
-     *
-     * @param ipAddress ip地址
-     * @param geoIpAuth geoIpAuth
-     * @return 国家代码（例如：香港-HK）
-     */
-    public static String getIpCountry(String ipAddress, String geoIpAuth) {
+    @Override
+    public String getIpCountry(String ipAddress, String geoIpAuth) {
         String country = null;
 
         // 不使用GeoIP2
@@ -181,15 +162,8 @@ public class DnsUtils {
         return country;
     }
 
-    /**
-     * 添加cf域名dns记录
-     *
-     * @param domainPrefix 域名前缀
-     * @param ipAddress    ip地址
-     * @param zoneId       zoneId
-     * @param apiToken     apiToken
-     */
-    public static void addCfDnsRecords(String domainPrefix, String ipAddress, String zoneId, String apiToken) {
+    @Override
+    public void addCfDnsRecords(String domainPrefix, String ipAddress, String zoneId, String apiToken) {
         String curlCommand = String.format(CF_ADD_DNS_RECORDS_API, zoneId, apiToken, domainPrefix, ipAddress);
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
         try {
@@ -215,14 +189,8 @@ public class DnsUtils {
         }
     }
 
-    /**
-     * 清除cf域名dns记录
-     *
-     * @param proxyDomainList 域名列表
-     * @param zoneId          zoneId
-     * @param apiToken        apiToken
-     */
-    public static void removeCfDnsRecords(List<String> proxyDomainList, String zoneId, String apiToken) {
+    @Override
+    public void removeCfDnsRecords(List<String> proxyDomainList, String zoneId, String apiToken) {
         proxyDomainList.parallelStream().forEach(proxyDomain -> {
             String curlCommand = String.format(CF_REMOVE_DNS_RECORDS_API, zoneId, proxyDomain, apiToken, zoneId, apiToken);
             ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);

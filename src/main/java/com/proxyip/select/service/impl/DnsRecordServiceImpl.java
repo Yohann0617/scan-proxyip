@@ -1,16 +1,15 @@
 package com.proxyip.select.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.proxyip.select.bean.IpWithCountryCode;
 import com.proxyip.select.bean.ProxyIp;
 import com.proxyip.select.config.CloudflareCfg;
 import com.proxyip.select.config.DnsCfg;
 import com.proxyip.select.enums.EnumUtils;
 import com.proxyip.select.enums.dict.CountryEnum;
+import com.proxyip.select.service.IApiService;
 import com.proxyip.select.service.IDnsRecordService;
 import com.proxyip.select.service.IProxyIpService;
 import com.proxyip.select.utils.CommonUtils;
-import com.proxyip.select.utils.DnsUtils;
 import com.proxyip.select.utils.IdGen;
 import com.proxyip.select.utils.NetUtils;
 import org.springframework.stereotype.Service;
@@ -40,6 +39,8 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
     @Resource
     private IProxyIpService proxyIpService;
     @Resource
+    private IApiService apiService;
+    @Resource
     private IdGen idGen;
 
     @Override
@@ -57,9 +58,9 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
                 })
                 .map(ip -> {
                     // 获取国家代码
-                    String countryCode = DnsUtils.getIpCountry(ip, dnsCfg.getGeoipAuth());
+                    String countryCode = apiService.getIpCountry(ip, dnsCfg.getGeoipAuth());
                     if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
-                        countryCode = DnsUtils.getIpCountry(ip);
+                        countryCode = apiService.getIpCountry(ip);
                     }
 
                     ProxyIp proxyIp = new ProxyIp();
@@ -103,7 +104,7 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
                     if (countryCodeList.contains(x.getCountry())) {
                         String prefix =
                                 EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
-                        DnsUtils.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+                        apiService.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
                     }
                 });
         System.out.println("√√√ 所有DNS记录添加完成!!! √√√");
@@ -127,7 +128,7 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
 
             // 发送到网盘api
             if (!"".equals(dnsCfg.getUploadApi())) {
-                DnsUtils.uploadFileToNetDisc(outputFile, dnsCfg.getUploadApi());
+                apiService.uploadFileToNetDisc(outputFile, dnsCfg.getUploadApi());
             }
         });
     }
@@ -144,16 +145,16 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
                 if (releaseIps.contains(ipAddress) || NetUtils.getPingResult(ipAddress)) {
                     try {
                         // 获取国家代码
-                        String countryCode = DnsUtils.getIpCountry(ipAddress, dnsCfg.getGeoipAuth());
+                        String countryCode = apiService.getIpCountry(ipAddress, dnsCfg.getGeoipAuth());
                         if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
-                            countryCode = DnsUtils.getIpCountry(ipAddress);
+                            countryCode = apiService.getIpCountry(ipAddress);
                         }
 
                         // 添加cf记录
                         if (countryCodeList.contains(countryCode)) {
                             String prefix =
                                     EnumUtils.getEnumByCode(CountryEnum.class, countryCode).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
-                            DnsUtils.addCfDnsRecords(prefix, ipAddress, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+                            apiService.addCfDnsRecords(prefix, ipAddress, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
                         }
 
                         // 写入文件
@@ -172,7 +173,7 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
 
             // 发送到网盘api
             if (!"".equals(dnsCfg.getUploadApi())) {
-                DnsUtils.uploadFileToNetDisc(outputFile, dnsCfg.getUploadApi());
+                apiService.uploadFileToNetDisc(outputFile, dnsCfg.getUploadApi());
             }
         } catch (Exception e) {
             e.printStackTrace();
@@ -185,7 +186,7 @@ public class DnsRecordServiceImpl implements IDnsRecordService {
         List<String> proxyDomainList = Arrays.stream(CountryEnum.values())
                 .map(x -> x.getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix() + "." + cloudflareCfg.getRootDomain())
                 .collect(Collectors.toList());
-        DnsUtils.removeCfDnsRecords(proxyDomainList, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+        apiService.removeCfDnsRecords(proxyDomainList, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
         System.out.println("√√√ 所有DNS记录已清除成功，开始添加DNS记录... √√√");
     }
 

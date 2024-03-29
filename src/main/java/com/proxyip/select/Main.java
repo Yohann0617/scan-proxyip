@@ -2,8 +2,8 @@ package com.proxyip.select;
 
 import com.proxyip.select.config.CloudflareCfg;
 import com.proxyip.select.config.DnsCfg;
+import com.proxyip.select.service.IApiService;
 import com.proxyip.select.service.IDnsRecordService;
-import com.proxyip.select.utils.DnsUtils;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.scheduling.TaskScheduler;
@@ -33,6 +33,8 @@ public class Main implements ApplicationRunner {
     @Resource
     private IDnsRecordService dnsRecordService;
     @Resource
+    private IApiService apiService;
+    @Resource
     private TaskScheduler taskScheduler;
 
     /**
@@ -42,7 +44,7 @@ public class Main implements ApplicationRunner {
         System.out.println("当前时间：" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "，开始更新DNS记录...");
         long begin = System.currentTimeMillis();
         // 获取proxyIps
-        List<String> ipAddresses = DnsUtils.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
+        List<String> ipAddresses = apiService.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
 
         if (ipAddresses.size() != 0) {
             // 清除dns旧记录
