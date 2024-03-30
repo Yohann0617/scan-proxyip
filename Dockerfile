@@ -1,9 +1,6 @@
 # 第一阶段：使用Maven构建jar
 FROM maven:3.8.4-openjdk-11 AS builder
 
-# 定义全局变量
-ARG PROJECT_VERSION=1.0.4
-
 # 设置工作目录
 WORKDIR /app
 
@@ -13,7 +10,7 @@ COPY . .
 
 # 执行Maven构建并将构建的jar文件复制到指定目录
 RUN mvn clean package -DskipTests \
-    && cp foreign-server/target/foreign-server-${PROJECT_VERSION}.jar /app/foreign-server-${PROJECT_VERSION}.jar
+    && cp foreign-server/target/foreign-server-1.0.4.jar /app/foreign-server.jar
 
 # 支持AMD、ARM两种架构的镜像
 FROM dragonwell-registry.cn-hangzhou.cr.aliyuncs.com/dragonwell/dragonwell:8-centos
@@ -28,7 +25,7 @@ RUN yum install -y bind-utils curl epel-release \
 WORKDIR /app
 
 # 从第一阶段复制构建的jar文件
-COPY --from=builder /app/foreign-server-${PROJECT_VERSION}.jar .
+COPY --from=builder /app/foreign-server.jar .
 
 # 拷贝数据库文件
 COPY scan.db .
@@ -37,4 +34,4 @@ COPY scan.db .
 EXPOSE 8017
 
 # 定义启动命令
-CMD ["java", "-jar", "foreign-server-${PROJECT_VERSION}.jar"]
+CMD ["java", "-jar", "foreign-server.jar"]
