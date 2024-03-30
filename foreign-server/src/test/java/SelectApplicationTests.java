@@ -1,3 +1,6 @@
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.proxyip.select.common.bean.ProxyIp;
 import com.proxyip.select.common.service.IProxyIpService;
 import com.proxyip.select.config.CloudflareCfg;
 import com.proxyip.select.config.DnsCfg;
@@ -15,7 +18,6 @@ class SelectApplicationTests {
     private CloudflareCfg cloudflareCfg;
     @Resource
     private IProxyIpService proxyIpService;
-
     @Test
     void contextLoads() {
 

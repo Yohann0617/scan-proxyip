@@ -1,7 +1,7 @@
 package com.proxyip.select.task;
 
 import com.proxyip.select.common.service.IApiService;
-import com.proxyip.select.service.IDnsRecordService;
+import com.proxyip.select.business.IDnsRecordService;
 import com.proxyip.select.config.CloudflareCfg;
 import com.proxyip.select.config.DnsCfg;
 import org.springframework.boot.ApplicationArguments;

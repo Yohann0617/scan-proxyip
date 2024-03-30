@@ -1,14 +1,17 @@
 package com.proxyip.select.common.service.impl;
 
+import com.proxyip.select.common.exception.BusinessException;
 import com.proxyip.select.common.service.IApiService;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * <p>
@@ -186,6 +189,7 @@ public class ApiServiceImpl implements IApiService {
 //        System.out.println("域名：" + domainPrefix + "." + dnsCfg.getRootDomain() + " 的dns记录添加成功！ip地址：" + ipAddress);
         } catch (Exception e) {
             e.printStackTrace();
+            throw new BusinessException(-1, "添加cf记录失败：" + e.getLocalizedMessage());
         }
     }
 
@@ -211,8 +215,9 @@ public class ApiServiceImpl implements IApiService {
 //                } catch (Exception e) {
 //                    e.printStackTrace();
 //                }
-            } catch (Exception e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
+                throw new BusinessException(-1, "清除DNS记录失败：" + e.getLocalizedMessage());
             }
             System.out.println("√√√ 域名：" + proxyDomain + "的dns记录已清除！ √√√");
         });

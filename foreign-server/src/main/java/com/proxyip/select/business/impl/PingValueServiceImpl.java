@@ -1,10 +1,10 @@
-package com.proxyip.select.service.impl;
+package com.proxyip.select.business.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.proxyip.select.common.bean.ProxyIp;
 import com.proxyip.select.common.service.IProxyIpService;
 import com.proxyip.select.common.utils.CommonUtils;
-import com.proxyip.select.service.IPingValueService;
+import com.proxyip.select.business.IPingValueService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;

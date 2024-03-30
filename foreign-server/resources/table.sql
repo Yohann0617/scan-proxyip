@@ -6,3 +6,6 @@ create table if not exists `proxy_ip`
     ping_value INT          null,     --'ping值'
     primary key ("id")
 );--代理ip表
+
+CREATE INDEX idx_country ON proxy_ip (country);
+CREATE INDEX idx_ip ON proxy_ip (ip);

@@ -1,4 +1,4 @@
-package com.proxyip.select.service;
+package com.proxyip.select.business;
 
 import com.proxyip.select.common.bean.ProxyIp;
 
