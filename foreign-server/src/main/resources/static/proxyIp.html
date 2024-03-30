@@ -111,7 +111,7 @@
       <el-table-column prop="pingValue" label="pingValue"></el-table-column>
       <el-table-column label="Action">
         <template slot-scope="scope">
-          <el-button @click="addSingleDnsRecord(scope.row.id)">添加到CF域名DNS记录</el-button>
+          <el-button type="primary" @click="addSingleDnsRecord(scope.row.id)">添加到CF域名DNS记录</el-button>
         </template>
       </el-table-column>
     </el-table>
