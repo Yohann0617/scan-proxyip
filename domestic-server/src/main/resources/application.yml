@@ -1,0 +1,31 @@
+server:
+  port: 8018
+
+api:
+  proxyip:
+    get-list-api: https://proxyip.19990617.xyz/api/list
+    update-ping-value-api: https://proxyip.19990617.xyz/api/updatePingValue
+
+spring:
+  datasource:
+    type: com.alibaba.druid.pool.DruidDataSource
+    driver-class-name: org.sqlite.JDBC
+    url: jdbc:sqlite:scan.db
+    druid:
+      pool-prepared-statements: false
+      max-pool-prepared-statement-per-connection-size: -1
+
+# cloudflare配置
+cloudflare-cfg:
+  zone-id:
+  # 需要自行创建
+  api-token:
+  # root域名（cf托管的域名）
+  root-domain:
+  # 优选ip域名前缀
+  proxy-domain-prefix:
+
+snow:
+  id:
+    worker-id: 0
+    datacenter-id: 0

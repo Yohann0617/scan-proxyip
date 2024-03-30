@@ -1,4 +1,4 @@
-package com.proxyip.select.service.impl;
+package com.proxyip.select.business.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.proxyip.select.common.bean.ProxyIp;
@@ -11,7 +11,7 @@ import com.proxyip.select.common.enums.dict.CountryEnum;
 import com.proxyip.select.common.utils.CommonUtils;
 import com.proxyip.select.config.CloudflareCfg;
 import com.proxyip.select.config.DnsCfg;
-import com.proxyip.select.service.IDnsRecordService;
+import com.proxyip.select.business.IDnsRecordService;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
