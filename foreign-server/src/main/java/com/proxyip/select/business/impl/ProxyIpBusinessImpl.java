@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.proxyip.select.bean.params.*;
-import com.proxyip.select.business.IDnsRecordService;
+import com.proxyip.select.business.IDnsRecordBusiness;
 import com.proxyip.select.common.bean.ProxyIp;
 import com.proxyip.select.business.IProxyIpBusiness;
 import com.proxyip.select.common.enums.EnumUtils;
@@ -13,7 +13,6 @@ import com.proxyip.select.common.service.IApiService;
 import com.proxyip.select.common.service.IProxyIpService;
 import com.proxyip.select.common.utils.CommonUtils;
 import com.proxyip.select.config.CloudflareCfg;
-import com.proxyip.select.config.DnsCfg;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -35,7 +34,7 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
     @Resource
     private IProxyIpService proxyIpService;
     @Resource
-    private IDnsRecordService dnsRecordService;
+    private IDnsRecordBusiness dnsRecordService;
     @Resource
     private IApiService apiService;
 
@@ -44,7 +43,8 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
         return proxyIpService.page(new Page<>(params.getCurrentPage(), params.getPageSize()),
                 new LambdaQueryWrapper<ProxyIp>()
                         .likeRight(ProxyIp::getCountry, params.getKeyword()).or()
-                        .likeRight(ProxyIp::getIp, params.getKeyword()));
+                        .likeRight(ProxyIp::getIp, params.getKeyword())
+                        .orderByAsc(ProxyIp::getPingValue));
     }
 
     @Override
@@ -55,7 +55,7 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
     @Override
     public void rmSingleDnsRecord(RmSingleDnsRecordParams params) {
         apiService.removeCfDnsRecords(
-                Collections.singletonList(params.getProxyDomain()),
+                Collections.singletonList(params.getProxyDomain() + "." + cloudflareCfg.getProxyDomainPrefix() + "." + cloudflareCfg.getRootDomain()),
                 cloudflareCfg.getZoneId(),
                 cloudflareCfg.getApiToken());
     }

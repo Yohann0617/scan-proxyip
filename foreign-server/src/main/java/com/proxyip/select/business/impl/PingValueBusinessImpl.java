@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.proxyip.select.common.bean.ProxyIp;
 import com.proxyip.select.common.service.IProxyIpService;
 import com.proxyip.select.common.utils.CommonUtils;
-import com.proxyip.select.business.IPingValueService;
+import com.proxyip.select.business.IPingValueBusiness;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -21,7 +21,7 @@ import java.util.Optional;
  * @date: 2024/3/29 20:12
  */
 @Service
-public class PingValueServiceImpl implements IPingValueService {
+public class PingValueBusinessImpl implements IPingValueBusiness {
 
     @Resource
     private IProxyIpService proxyIpService;

@@ -1,7 +1,6 @@
 package com.proxyip.select.task;
 
-import com.proxyip.select.common.service.IApiService;
-import com.proxyip.select.business.IDnsRecordService;
+import com.proxyip.select.business.IDnsRecordBusiness;
 import com.proxyip.select.config.CloudflareCfg;
 import com.proxyip.select.config.DnsCfg;
 import org.springframework.boot.ApplicationArguments;
@@ -11,9 +10,6 @@ import org.springframework.scheduling.support.CronTrigger;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.*;
 
 /**
  * <p>
@@ -31,33 +27,9 @@ public class UpdateDnsRecordsTask implements ApplicationRunner {
     @Resource
     private CloudflareCfg cloudflareCfg;
     @Resource
-    private IDnsRecordService dnsRecordService;
-    @Resource
-    private IApiService apiService;
+    private IDnsRecordBusiness dnsRecordBusiness;
     @Resource
     private TaskScheduler taskScheduler;
-
-    /**
-     * 更新dns记录任务
-     */
-    private void updateProxyIpTask() {
-        System.out.println("当前时间：" + LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")) + "，开始更新DNS记录...");
-        long begin = System.currentTimeMillis();
-        // 获取proxyIps
-        List<String> ipAddresses = apiService.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
-
-        if (ipAddresses.size() != 0) {
-            // 清除dns旧记录
-            dnsRecordService.rmCfDnsRecords();
-
-            // 添加DNS记录并保存到文件
-            dnsRecordService.addLimitDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile());
-        }
-
-        long end = System.currentTimeMillis();
-
-        System.out.println("√√√ 更新DNS记录任务完成!!!总耗时：" + (end - begin) + " ms √√√");
-    }
 
     /**
      * 校验参数是否配置
@@ -84,11 +56,11 @@ public class UpdateDnsRecordsTask implements ApplicationRunner {
 
         if (dnsCfg.getPowerOnExec()) {
             // 服务启动立马执行一次
-            updateProxyIpTask();
+            dnsRecordBusiness.updateProxyIpTask();
         }
 
         // 执行定时任务
-        taskScheduler.schedule(dnsRecordService::rmIpInDb, new CronTrigger("0 0 0 * * ?"));
-        taskScheduler.schedule(this::updateProxyIpTask, new CronTrigger(dnsCfg.getCron()));
+        taskScheduler.schedule(dnsRecordBusiness::updateDbTask, new CronTrigger("0 0 0 * * ?"));
+        taskScheduler.schedule(dnsRecordBusiness::updateProxyIpTask, new CronTrigger(dnsCfg.getCron()));
     }
 }

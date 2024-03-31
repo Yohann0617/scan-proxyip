@@ -10,7 +10,7 @@ import java.util.List;
  * @author yuhui.fan
  * @since 2024/3/21 14:26
  */
-public interface IDnsRecordService {
+public interface IDnsRecordBusiness {
 
     /**
      * 添加dns记录并将ip地址写入文件
@@ -38,4 +38,19 @@ public interface IDnsRecordService {
      * 清除数据库中无效的ip
      */
     void rmIpInDb();
+
+    /**
+     * 更新dns记录任务
+     */
+    void updateProxyIpTask();
+
+    /**
+     * 更新数据库任务
+     */
+    void updateDbTask();
+
+    /**
+     * 更新数据库中ip的ping值
+     */
+    void updateIpPingValueInDb();
 }

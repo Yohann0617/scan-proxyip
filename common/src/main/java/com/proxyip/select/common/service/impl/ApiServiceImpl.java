@@ -2,6 +2,7 @@ package com.proxyip.select.common.service.impl;
 
 import com.proxyip.select.common.exception.BusinessException;
 import com.proxyip.select.common.service.IApiService;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;

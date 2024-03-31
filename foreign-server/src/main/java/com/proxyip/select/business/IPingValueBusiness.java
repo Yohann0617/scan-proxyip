@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * @author Yohann
  */
-public interface IPingValueService {
+public interface IPingValueBusiness {
 
     /**
      * 获取带有ping值的代理ip列表

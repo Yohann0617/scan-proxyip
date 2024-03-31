@@ -93,12 +93,24 @@
 <div id="app">
   <h2>代理IP列表</h2>
   <div style="margin-top: 15px; width: 600px;">
-    <el-input placeholder="输入国家代号、ip地址进行模糊查询" v-model="pageParams.keyword" class="input-with-select">
+    <el-input clearable placeholder="输入国家代号、ip地址进行模糊查询" v-model="pageParams.keyword" class="input-with-select">
       <el-button slot="append" icon="el-icon-search" round @click="search"></el-button>
     </el-input>
   </div>
   <div style="margin-top: 15px; width: 600px;">
-    <el-input placeholder="输入需要删除DNS记录的代理域名，如：hk.proxyip.abc.com" v-model="proxyDomain" class="input-with-select">
+    <el-input clearable placeholder="输入需要删除DNS记录的代理域名前缀，如：hk" v-model="proxyDomain"
+              class="input-with-select">
+      <el-select v-model="proxyDomain" slot="prepend" placeholder="请选择代理域名">
+        <el-option label="美国" value="us"></el-option>
+        <el-option label="英国" value="gb"></el-option>
+        <el-option label="荷兰" value="nl"></el-option>
+        <el-option label="德国" value="de"></el-option>
+        <el-option label="香港" value="hk"></el-option>
+        <el-option label="澳门" value="mo"></el-option>
+        <el-option label="新加坡" value="sg"></el-option>
+        <el-option label="韩国" value="kr"></el-option>
+        <el-option label="日本" value="jp"></el-option>
+      </el-select>
       <el-button slot="append" icon="el-icon-delete" round @click="deleteDnsRecord"></el-button>
     </el-input>
   </div>
@@ -106,7 +118,7 @@
   <div align="left">
     <el-button @click="deleteBatch" type="warning">批量删除数据库中数据</el-button>
     <el-button @click="deleteAllDnsRecord" type="danger">删除所有代理域名DNS记录</el-button>
-    <el-button @click="addDnsRecordsBatch" type="success">批量解析所选ip地址到CF的DNS记录</el-button>
+    <el-button @click="addDnsRecordsBatch" type="primary">批量解析所选ip地址到CF的DNS记录</el-button>
   </div>
   <el-divider></el-divider>
   <div class="my_table">
@@ -119,7 +131,7 @@
       <el-table-column prop="pingValue" label="PingValue" width="500"></el-table-column>
       <el-table-column label="Action" fixed="right" width="120">
         <template slot-scope="scope">
-          <el-button type="success" round @click="addSingleDnsRecord(scope.row.id)" size="mini">解析到CF</el-button>
+          <el-button type="primary" round @click="addSingleDnsRecord(scope.row.id)" size="mini">解析到CF</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -157,10 +169,7 @@
           total: 0
         },
         proxyDomain: '',
-        tableData: [
-          {"id": "1", "country": "yohann", "ip": "123@qq.com", "pingValue": 123},
-          {"id": "2", "country": "fyh", "ip": "123@qq.com", "pingValue": 123}
-        ],
+        tableData: [],
         selectedRows: [] // 保存选中的行数据
       };
     },

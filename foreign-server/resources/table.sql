@@ -9,3 +9,4 @@ create table if not exists `proxy_ip`
 
 CREATE INDEX idx_country ON proxy_ip (country);
 CREATE INDEX idx_ip ON proxy_ip (ip);
+CREATE INDEX idx_ping_value ON proxy_ip (ping_value);
