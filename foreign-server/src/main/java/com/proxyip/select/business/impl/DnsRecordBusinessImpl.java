@@ -48,7 +48,6 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
     private IdGen idGen;
 
     private static final Logger logger = LoggerFactory.getLogger(DnsRecordBusinessImpl.class);
-    private static final String NOW_DATE_TIME = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
     @Override
     public void addLimitDnsRecordAndWriteToFile(List<String> ipAddresses, String outputFile) {
@@ -198,7 +197,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
 
     @Override
     public void rmIpInDb() {
-        logger.info("当前时间：{}，开始清除数据库中无效的ip...", NOW_DATE_TIME);
+        logger.info("当前时间：{}，开始清除数据库中无效的ip...", getNowDateTime());
         List<String> voidIdList = Optional.ofNullable(proxyIpService.list())
                 .filter(CommonUtils::isNotEmpty).orElseGet(Collections::emptyList).parallelStream()
                 .filter(x -> !dnsCfg.getReleaseIps().contains(x.getIp()))
@@ -213,7 +212,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
 
     @Override
     public void updateProxyIpTask() {
-        logger.info("当前时间：{}，开始更新DNS记录...", NOW_DATE_TIME);
+        logger.info("当前时间：{}，开始更新DNS记录...", getNowDateTime());
         long begin = System.currentTimeMillis();
         // 获取proxyIps
         List<String> ipAddresses = apiService.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
@@ -239,7 +238,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
 
     @Override
     public void updateIpPingValueInDb() {
-        logger.info("当前时间：{}，开始更新数据库中ip的ping值...", NOW_DATE_TIME);
+        logger.info("当前时间：{}，开始更新数据库中ip的ping值...", getNowDateTime());
         List<ProxyIp> proxyIpList = Optional.ofNullable(proxyIpService.list())
                 .filter(CommonUtils::isNotEmpty).orElseGet(Collections::emptyList).parallelStream()
                 .peek(x -> {
@@ -251,5 +250,14 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
             proxyIpService.updateBatchById(proxyIpList);
         }
         logger.info("√√√ 更新数据库中ip的ping值任务已完成 √√√");
+    }
+
+    /**
+     * 获取当前时间
+     *
+     * @return 当前时间
+     */
+    private String getNowDateTime() {
+        return LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
     }
 }
