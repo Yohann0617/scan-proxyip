@@ -15,6 +15,17 @@
       color: #061ef6;
     }
 
+    .button-container, .div1 {
+      display: flex; /* 使用 Flexbox 布局 */
+      justify-content: space-between; /* 按钮之间的间距自适应 */
+      margin-bottom: 20px;
+    }
+
+    /*.button-container button {*/
+    /*  !* 可以添加其他样式，例如背景色、边框等 *!*/
+    /*  padding: 10px 20px; !* 设置按钮的内边距 *!*/
+    /*}*/
+
     .git-contact-float {
       width: 25px;
       height: 25px;
@@ -81,37 +92,34 @@
 <body>
 <div id="app">
   <h2>代理IP列表</h2>
-  <div align="left">
-    <el-row>
-      <el-input :style="{ width: '400px' }" v-model="pageParams.keyword" placeholder="输入国家代号、ip地址进行模糊查询"></el-input>
-      <el-button @click="search" type="primary">搜索</el-button>
-    </el-row>
+  <div style="margin-top: 15px; width: 600px;">
+    <el-input placeholder="输入国家代号、ip地址进行模糊查询" v-model="pageParams.keyword" class="input-with-select">
+      <el-button slot="append" icon="el-icon-search" round @click="search"></el-button>
+    </el-input>
+  </div>
+  <div style="margin-top: 15px; width: 600px;">
+    <el-input placeholder="输入需要删除DNS记录的代理域名，如：hk.proxyip.abc.com" v-model="proxyDomain" class="input-with-select">
+      <el-button slot="append" icon="el-icon-delete" round @click="deleteDnsRecord"></el-button>
+    </el-input>
   </div>
   <el-divider></el-divider>
   <div align="left">
-    <el-button @click="deleteBatch" type="primary">批量删除数据库中数据</el-button>
-    <el-button @click="addDnsRecordsBatch" type="primary">批量添加所选ip地址到CF的DNS记录</el-button>
-    <el-button @click="deleteAllDnsRecord" type="primary">删除所有代理域名DNS记录</el-button>
-  </div>
-  <el-divider></el-divider>
-  <div align="left">
-    <el-row>
-      <el-input :style="{ width: '400px' }" v-model="proxyDomain" placeholder="输入代理域名，如：hk.proxyip.abc.com"></el-input>
-      <el-button @click="deleteDnsRecord" type="primary">删除指定代理域名DNS记录</el-button>
-    </el-row>
+    <el-button @click="deleteBatch" type="warning">批量删除数据库中数据</el-button>
+    <el-button @click="deleteAllDnsRecord" type="danger">删除所有代理域名DNS记录</el-button>
+    <el-button @click="addDnsRecordsBatch" type="success">批量添加所选ip地址到CF的DNS记录</el-button>
   </div>
   <el-divider></el-divider>
   <div class="my_table">
-    <el-table class="my_table" :data="tableData" style="width: 100%" border="false"
+    <el-table class="my_table" :data="tableData" style="width: 100%" border height="400"
               @select="handleSelect" @select-all="handleSelectAll">
       <el-table-column type="selection"></el-table-column>
-      <el-table-column prop="id" label="ID"></el-table-column>
-      <el-table-column prop="country" label="country"></el-table-column>
-      <el-table-column prop="ip" label="ip"></el-table-column>
-      <el-table-column prop="pingValue" label="pingValue"></el-table-column>
-      <el-table-column label="Action">
+      <el-table-column prop="id" label="ID" width="400"></el-table-column>
+      <el-table-column prop="country" label="Country" width="400"></el-table-column>
+      <el-table-column prop="ip" label="IP" width="400"></el-table-column>
+      <el-table-column prop="pingValue" label="PingValue" width="400"></el-table-column>
+      <el-table-column label="Action" fixed="right" width="400">
         <template slot-scope="scope">
-          <el-button type="primary" @click="addSingleDnsRecord(scope.row.id)">添加到CF域名DNS记录</el-button>
+          <el-button type="success" round @click="addSingleDnsRecord(scope.row.id)">添加到CF域名DNS记录</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -122,7 +130,7 @@
             :current-page="pageParams.currentPage"
             :page-size="pageParams.pageSize"
             :total="pageParams.total"
-            :page-sizes="[5, 10]"
+            :page-sizes="[5, 10, 15, 20, 100, 300]"
             layout="total, sizes, prev, pager, next, jumper"
     >
     </el-pagination>
