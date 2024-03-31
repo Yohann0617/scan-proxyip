@@ -19,16 +19,14 @@ FROM dragonwell-registry.cn-hangzhou.cr.aliyuncs.com/dragonwell/dragonwell:8-cen
 RUN yum install -y bind-utils curl epel-release \
     && yum install -y jq \
     && yum clean all \
-    && ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo Asia/Shanghai > /etc/timezone
+    && ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo Asia/Shanghai > /etc/timezone \
+    && mkdir -p /app && touch /app/scan.db
 
 # 设置工作目录
 WORKDIR /app
 
 # 从第一阶段复制构建的jar文件
 COPY --from=builder /app/foreign-server.jar .
-
-# 拷贝数据库文件
-COPY scan.db .
 
 # 暴露应用的端口
 EXPOSE 8017
