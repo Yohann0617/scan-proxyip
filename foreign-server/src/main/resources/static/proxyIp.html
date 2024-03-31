@@ -30,7 +30,7 @@
       width: 25px;
       height: 25px;
       position: fixed;
-      bottom: 20px;
+      top: 20px;
       right: 60px;
       background-color: rgba(83, 158, 239, 0.93);
       color: white;
@@ -57,7 +57,7 @@
       width: 25px;
       height: 25px;
       position: fixed;
-      bottom: 20px;
+      top: 20px;
       right: 20px;
       background-color: rgba(83, 158, 239, 0.93);
       color: white;
@@ -106,20 +106,20 @@
   <div align="left">
     <el-button @click="deleteBatch" type="warning">批量删除数据库中数据</el-button>
     <el-button @click="deleteAllDnsRecord" type="danger">删除所有代理域名DNS记录</el-button>
-    <el-button @click="addDnsRecordsBatch" type="success">批量添加所选ip地址到CF的DNS记录</el-button>
+    <el-button @click="addDnsRecordsBatch" type="success">批量解析所选ip地址到CF的DNS记录</el-button>
   </div>
   <el-divider></el-divider>
   <div class="my_table">
-    <el-table class="my_table" :data="tableData" style="width: 100%" border height="400"
+    <el-table class="my_table" :data="tableData" style="width: 100%" border height="330"
               @select="handleSelect" @select-all="handleSelectAll">
       <el-table-column type="selection"></el-table-column>
-      <el-table-column prop="id" label="ID" width="400"></el-table-column>
-      <el-table-column prop="country" label="Country" width="400"></el-table-column>
-      <el-table-column prop="ip" label="IP" width="400"></el-table-column>
-      <el-table-column prop="pingValue" label="PingValue" width="400"></el-table-column>
-      <el-table-column label="Action" fixed="right" width="400">
+      <el-table-column prop="id" label="ID" width="500"></el-table-column>
+      <el-table-column prop="country" label="Country" width="500"></el-table-column>
+      <el-table-column prop="ip" label="IP" width="500"></el-table-column>
+      <el-table-column prop="pingValue" label="PingValue" width="500"></el-table-column>
+      <el-table-column label="Action" fixed="right" width="120">
         <template slot-scope="scope">
-          <el-button type="success" round @click="addSingleDnsRecord(scope.row.id)">添加到CF域名DNS记录</el-button>
+          <el-button type="success" round @click="addSingleDnsRecord(scope.row.id)" size="mini">解析到CF</el-button>
         </template>
       </el-table-column>
     </el-table>
