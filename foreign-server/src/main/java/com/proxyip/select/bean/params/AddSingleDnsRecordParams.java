@@ -1,5 +1,7 @@
 package com.proxyip.select.bean.params;
 
+import lombok.Data;
+
 /**
  * @projectName: scan-proxyip
  * @package: com.proxyip.select.bean.params
@@ -7,15 +9,8 @@ package com.proxyip.select.bean.params;
  * @author: Yohann
  * @date: 2024/3/30 17:54
  */
+@Data
 public class AddSingleDnsRecordParams {
 
     private  String id;
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
 }

@@ -12,12 +12,19 @@ import com.proxyip.select.common.enums.dict.CountryEnum;
 import com.proxyip.select.common.service.IApiService;
 import com.proxyip.select.common.service.IProxyIpService;
 import com.proxyip.select.common.utils.CommonUtils;
+import com.proxyip.select.common.utils.IdGen;
+import com.proxyip.select.common.utils.NetUtils;
 import com.proxyip.select.config.CloudflareCfg;
+import com.proxyip.select.config.DnsCfg;
+import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * @projectName: scan-proxyip
@@ -30,6 +37,8 @@ import java.util.Optional;
 public class ProxyIpBusinessImpl implements IProxyIpBusiness {
 
     @Resource
+    private DnsCfg dnsCfg;
+    @Resource
     private CloudflareCfg cloudflareCfg;
     @Resource
     private IProxyIpService proxyIpService;
@@ -37,6 +46,8 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
     private IDnsRecordBusiness dnsRecordService;
     @Resource
     private IApiService apiService;
+    @Resource
+    private IdGen idGen;
 
     @Override
     public IPage<ProxyIp> pageList(ProxyIpPageParams params) {
@@ -44,12 +55,21 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
                 new LambdaQueryWrapper<ProxyIp>()
                         .likeRight(ProxyIp::getCountry, params.getKeyword()).or()
                         .likeRight(ProxyIp::getIp, params.getKeyword())
-                        .orderByAsc(ProxyIp::getPingValue));
+                        .orderByDesc(ProxyIp::getCreateTime));
     }
 
     @Override
     public void rmAllDnsRecords() {
         dnsRecordService.rmCfDnsRecords();
+    }
+
+    @Override
+    public void rmSingleIpDnsRecord(RmSingleIpDnsRecordParams params) {
+        apiService.removeCfSingleDnsRecords(
+                params.getProxyDomain() + "." + cloudflareCfg.getProxyDomainPrefix() + "." + cloudflareCfg.getRootDomain(),
+                params.getIp(),
+                cloudflareCfg.getZoneId(),
+                cloudflareCfg.getApiToken());
     }
 
     @Override
@@ -82,15 +102,43 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
     public void addDnsRecordsBatch(AddDnsRecordsBatchParams params) {
         Optional.ofNullable(proxyIpService.listByIds(params.getIds()))
                 .filter(CommonUtils::isNotEmpty).ifPresent(list -> {
-                    list.parallelStream().forEach(proxyIp -> {
-                        String prefix = EnumUtils.getEnumByCode(CountryEnum.class, proxyIp.getCountry()).getLowCode() + "."
-                                + cloudflareCfg.getProxyDomainPrefix();
-                        apiService.addCfDnsRecords(
-                                prefix,
-                                proxyIp.getIp(),
-                                cloudflareCfg.getZoneId(),
-                                cloudflareCfg.getApiToken());
-                    });
-                });
+            list.parallelStream().forEach(proxyIp -> {
+                String prefix = EnumUtils.getEnumByCode(CountryEnum.class, proxyIp.getCountry()).getLowCode() + "."
+                        + cloudflareCfg.getProxyDomainPrefix();
+                apiService.addCfDnsRecords(
+                        prefix,
+                        proxyIp.getIp(),
+                        cloudflareCfg.getZoneId(),
+                        cloudflareCfg.getApiToken());
+            });
+        });
+    }
+
+    @Override
+    public void addProxyIpToDbBatch(AddProxyIpToDbParams params) {
+        Optional.ofNullable(params.getIpList())
+                .filter(CommonUtils::isNotEmpty).ifPresent(ipList -> {
+            List<ProxyIp> list = ipList.parallelStream()
+                    .map(String::trim)
+                    .map(ip -> {
+                        // 获取国家代码
+                        String countryCode = apiService.getIpCountry(ip, dnsCfg.getGeoipAuth());
+                        if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
+                            countryCode = apiService.getIpCountry(ip);
+                        }
+
+                        ProxyIp proxyIp = new ProxyIp();
+                        proxyIp.setId(String.valueOf(idGen.nextId()));
+                        proxyIp.setCountry(countryCode);
+                        proxyIp.setIp(ip);
+                        Integer pingValue = NetUtils.getPingValue(ip);
+                        proxyIp.setPingValue(pingValue == null ? 999999 : pingValue);
+                        proxyIp.setCreateTime(LocalDateTime.now());
+                        return proxyIp;
+                    }).collect(Collectors.toList());
+            list.removeIf(x -> Optional.ofNullable(proxyIpService.getOne(new LambdaQueryWrapper<ProxyIp>()
+                    .eq(ProxyIp::getIp, x.getIp()))).isPresent());
+            proxyIpService.saveBatch(list);
+        });
     }
 }

@@ -64,4 +64,14 @@ public interface IApiService {
      * @param apiToken        apiToken
      */
     void removeCfDnsRecords(List<String> proxyDomainList, String zoneId, String apiToken);
+
+    /**
+     * 清除cf指定代理域名的某个ip地址的dns记录
+     *
+     * @param proxyDomain 代理域名
+     * @param ip          ip地址
+     * @param zoneId      zoneId
+     * @param apiToken    apiToken
+     */
+    void removeCfSingleDnsRecords(String proxyDomain, String ip, String zoneId, String apiToken);
 }

@@ -2,17 +2,16 @@ package com.proxyip.select.bean.params;
 
 import lombok.Data;
 
-import java.util.List;
-
 /**
  * @projectName: scan-proxyip
  * @package: com.proxyip.select.bean.params
- * @className: AddDnsRecordsBatchParams
+ * @className: RmSingleDnsRecordParams
  * @author: Yohann
- * @date: 2024/3/30 20:47
+ * @date: 2024/3/30 17:59
  */
 @Data
-public class AddDnsRecordsBatchParams {
+public class RmSingleIpDnsRecordParams {
 
-    List<String> ids;
+    private String proxyDomain;
+    private String ip;
 }
