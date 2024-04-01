@@ -79,14 +79,12 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                 }).collect(Collectors.toList());
 
         // 持久化到数据库
-        CompletableFuture.runAsync(() -> {
-            List<String> ipInDbList = proxyIpService.listObjs(new LambdaQueryWrapper<ProxyIp>()
-                    .select(ProxyIp::getIp), String::valueOf);
-            if (CommonUtils.isNotEmpty(ipInDbList)) {
-                list.removeIf(x -> ipInDbList.contains(x.getIp()));
-            }
-            proxyIpService.saveBatch(list);
-        });
+        List<String> ipInDbList = proxyIpService.listObjs(new LambdaQueryWrapper<ProxyIp>()
+                .select(ProxyIp::getIp), String::valueOf);
+        if (CommonUtils.isNotEmpty(ipInDbList)) {
+            list.removeIf(x -> ipInDbList.contains(x.getIp()));
+        }
+        proxyIpService.saveBatch(list);
 
         // 分组并保留五条记录
         Map<String, List<ProxyIp>> ipGroupByCountryMap = list.parallelStream()
@@ -101,17 +99,30 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                                 }
                         )));
 
+        // 没有解析到的国家便使用数据库中的proxyIp
+        countryCodeList.parallelStream().forEach(countryCode -> {
+            if (!ipGroupByCountryMap.containsKey(countryCode)) {
+                List<ProxyIp> proxyIpList = proxyIpService.list(new LambdaQueryWrapper<ProxyIp>()
+                        .eq(ProxyIp::getCountry, countryCode)
+                        .orderByAsc(ProxyIp::getPingValue)
+                        .last("limit 5"));
+                if (CommonUtils.isNotEmpty(proxyIpList)) {
+                    ipGroupByCountryMap.put(countryCode, proxyIpList);
+                }
+            }
+        });
+
         // 添加cf记录
         ipGroupByCountryMap.values().stream()
                 .flatMap(List::stream)
                 .collect(Collectors.toList())
                 .parallelStream().forEach(x -> {
-                    if (countryCodeList.contains(x.getCountry())) {
-                        String prefix =
-                                EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
-                        apiService.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
-                    }
-                });
+            if (countryCodeList.contains(x.getCountry())) {
+                String prefix =
+                        EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
+                apiService.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+            }
+        });
         logger.info("√√√ 所有DNS记录添加完成!!! √√√");
 
         // 写入文件
