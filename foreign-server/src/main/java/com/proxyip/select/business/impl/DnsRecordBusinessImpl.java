@@ -12,6 +12,7 @@ import com.proxyip.select.common.utils.CommonUtils;
 import com.proxyip.select.config.CloudflareCfg;
 import com.proxyip.select.config.DnsCfg;
 import com.proxyip.select.business.IDnsRecordBusiness;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,7 @@ import java.util.stream.Collectors;
  * @since 2024/3/21 14:26
  */
 @Service
+@Slf4j
 public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
 
     @Resource
@@ -46,8 +48,6 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
     private IApiService apiService;
     @Resource
     private IdGen idGen;
-
-    private static final Logger logger = LoggerFactory.getLogger(DnsRecordBusinessImpl.class);
 
     @Override
     public void addLimitDnsRecordAndWriteToFile(List<String> ipAddresses, String outputFile) {
@@ -75,15 +75,13 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                     proxyIp.setIp(ip);
                     Integer pingValue = NetUtils.getPingValue(ip);
                     proxyIp.setPingValue(pingValue == null ? 999999 : pingValue);
+                    proxyIp.setCreateTime(LocalDateTime.now());
                     return proxyIp;
                 }).collect(Collectors.toList());
 
         // 持久化到数据库
-        List<String> ipInDbList = proxyIpService.listObjs(new LambdaQueryWrapper<ProxyIp>()
-                .select(ProxyIp::getIp), String::valueOf);
-        if (CommonUtils.isNotEmpty(ipInDbList)) {
-            list.removeIf(x -> ipInDbList.contains(x.getIp()));
-        }
+        list.removeIf(x -> Optional.ofNullable(proxyIpService.getOne(new LambdaQueryWrapper<ProxyIp>()
+                .eq(ProxyIp::getIp, x.getIp()))).isPresent());
         proxyIpService.saveBatch(list);
 
         // 分组并保留五条记录
@@ -123,7 +121,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                 apiService.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
             }
         });
-        logger.info("√√√ 所有DNS记录添加完成!!! √√√");
+        log.info("√√√ 所有DNS记录添加完成!!! √√√");
 
         // 写入文件
         CompletableFuture.runAsync(() -> {
@@ -140,7 +138,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
             } catch (Exception e) {
                 throw new RuntimeException("写入文件：" + outputFile + "失败");
             }
-            logger.info("√√√ 获取proxyIps任务完成，文件位置：{} √√√", outputFile);
+            log.info("√√√ 获取proxyIps任务完成，文件位置：{} √√√", outputFile);
 
             // 发送到网盘api
             if (!"".equals(dnsCfg.getUploadApi())) {
@@ -180,12 +178,12 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                         e.printStackTrace();
                     }
                 } else {
-                    logger.info("IP：{} 无法ping通，已跳过", ipAddress);
+                    log.info("IP：{} 无法ping通，已跳过", ipAddress);
                 }
             });
 
-            logger.info("√√√ 所有DNS记录添加完成!!! √√√");
-            logger.info("√√√ 获取proxyIps任务完成，文件位置：{} √√√", outputFile);
+            log.info("√√√ 所有DNS记录添加完成!!! √√√");
+            log.info("√√√ 获取proxyIps任务完成，文件位置：{} √√√", outputFile);
 
             // 发送到网盘api
             if (!"".equals(dnsCfg.getUploadApi())) {
@@ -203,12 +201,12 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                 .map(x -> x.getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix() + "." + cloudflareCfg.getRootDomain())
                 .collect(Collectors.toList());
         apiService.removeCfDnsRecords(proxyDomainList, cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
-        logger.info("√√√ 所有DNS记录已清除成功，开始添加DNS记录... √√√");
+        log.info("√√√ 所有DNS记录已清除成功，开始添加DNS记录... √√√");
     }
 
     @Override
     public void rmIpInDb() {
-        logger.info("当前时间：{}，开始清除数据库中无效的ip...", getNowDateTime());
+        log.info("当前时间：{}，开始清除数据库中无效的ip...", getNowDateTime());
         List<String> voidIdList = Optional.ofNullable(proxyIpService.list())
                 .filter(CommonUtils::isNotEmpty).orElseGet(Collections::emptyList).parallelStream()
                 .filter(x -> !dnsCfg.getReleaseIps().contains(x.getIp()))
@@ -218,12 +216,12 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
         if (CommonUtils.isNotEmpty(voidIdList)) {
             proxyIpService.removeByIds(voidIdList);
         }
-        logger.info("√√√ 清除数据库中无效ip任务已完成 √√√");
+        log.info("√√√ 清除数据库中无效ip任务已完成 √√√");
     }
 
     @Override
     public void updateProxyIpTask() {
-        logger.info("当前时间：{}，开始更新DNS记录...", getNowDateTime());
+        log.info("当前时间：{}，开始更新DNS记录...", getNowDateTime());
         long begin = System.currentTimeMillis();
         // 获取proxyIps
         List<String> ipAddresses = apiService.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
@@ -238,7 +236,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
 
         long end = System.currentTimeMillis();
 
-        logger.info("√√√ 更新DNS记录任务完成!!!总耗时：{} ms √√√", (end - begin));
+        log.info("√√√ 更新DNS记录任务完成!!!总耗时：{} ms √√√", (end - begin));
     }
 
     @Override
@@ -249,7 +247,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
 
     @Override
     public void updateIpPingValueInDb() {
-        logger.info("当前时间：{}，开始更新数据库中ip的ping值...", getNowDateTime());
+        log.info("当前时间：{}，开始更新数据库中ip的ping值...", getNowDateTime());
         List<ProxyIp> proxyIpList = Optional.ofNullable(proxyIpService.list())
                 .filter(CommonUtils::isNotEmpty).orElseGet(Collections::emptyList).parallelStream()
                 .peek(x -> {
@@ -260,7 +258,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
         if (CommonUtils.isNotEmpty(proxyIpList)) {
             proxyIpService.updateBatchById(proxyIpList);
         }
-        logger.info("√√√ 更新数据库中ip的ping值任务已完成 √√√");
+        log.info("√√√ 更新数据库中ip的ping值任务已完成 √√√");
     }
 
     /**

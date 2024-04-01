@@ -1,5 +1,5 @@
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.proxyip.select.SelectApplication;
-import com.proxyip.select.bean.params.ProxyIpPageParams;
 import com.proxyip.select.business.IProxyIpBusiness;
 import com.proxyip.select.common.bean.ProxyIp;
 import com.proxyip.select.common.service.IProxyIpService;
@@ -25,12 +25,8 @@ public class DbTest {
 
     @Test
     void contextLoads() {
-//        ProxyIpPageParams params = new ProxyIpPageParams("", 1, 5);
-//        Page<ProxyIp> page = proxyIpBusiness.pageList(params);
-//        page.getRecords().forEach(System.out::println);
-
-        com.baomidou.mybatisplus.extension.plugins.pagination.Page<ProxyIp> page = new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(1, 5);
-        com.baomidou.mybatisplus.extension.plugins.pagination.Page<ProxyIp> proxyIpPage = proxyIpService.page(page);
+        Page<ProxyIp> page = new Page<>(1, 5);
+        Page<ProxyIp> proxyIpPage = proxyIpService.page(page);
         proxyIpPage.getRecords().forEach(System.out::println);
     }
 }

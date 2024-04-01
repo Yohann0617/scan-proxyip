@@ -1,12 +1,17 @@
 package com.proxyip.select.common.bean;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
+
 import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * 代理ip表
  *
  * @author Yohann
  */
+@Data
 public class ProxyIp implements Serializable {
     private String id;
 
@@ -16,57 +21,8 @@ public class ProxyIp implements Serializable {
 
     private Integer pingValue;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss",timezone="GMT+8")
+    private LocalDateTime createTime;
+
     private static final long serialVersionUID = 1L;
-
-    @Override
-    public String toString() {
-        return "ProxyIp{" +
-                "id='" + id + '\'' +
-                ", country='" + country + '\'' +
-                ", ip='" + ip + '\'' +
-                ", pingValue=" + pingValue +
-                '}';
-    }
-
-    public ProxyIp() {
-    }
-
-    public ProxyIp(String id, String country, String ip, Integer pingValue) {
-        this.id = id;
-        this.country = country;
-        this.ip = ip;
-        this.pingValue = pingValue;
-    }
-
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public String getCountry() {
-        return country;
-    }
-
-    public void setCountry(String country) {
-        this.country = country;
-    }
-
-    public String getIp() {
-        return ip;
-    }
-
-    public void setIp(String ip) {
-        this.ip = ip;
-    }
-
-    public Integer getPingValue() {
-        return pingValue;
-    }
-
-    public void setPingValue(Integer pingValue) {
-        this.pingValue = pingValue;
-    }
 }

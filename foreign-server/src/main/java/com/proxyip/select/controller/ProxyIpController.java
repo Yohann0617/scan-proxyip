@@ -40,10 +40,16 @@ public class ProxyIpController {
         return ResponseData.successData("删除所有dns记录成功");
     }
 
+    @PostMapping(path = "/rmSingleIpDnsRecord")
+    public ResponseData<Void> rmSingleIpDnsRecord(@RequestBody RmSingleIpDnsRecordParams params) {
+        proxyIpBusiness.rmSingleIpDnsRecord(params);
+        return ResponseData.successData("删除该代理域名的某个ip地址的dns记录成功");
+    }
+
     @PostMapping(path = "/rmSingleDnsRecord")
     public ResponseData<Void> rmSingleDnsRecord(@RequestBody RmSingleDnsRecordParams params) {
         proxyIpBusiness.rmSingleDnsRecord(params);
-        return ResponseData.successData("删除改代理域名所有dns记录成功");
+        return ResponseData.successData("删除该代理域名所有dns记录成功");
     }
 
     @PostMapping(path = "/addSingleDnsRecord")
@@ -56,5 +62,11 @@ public class ProxyIpController {
     public ResponseData<Void> addDnsRecordsBatch(@RequestBody AddDnsRecordsBatchParams params) {
         proxyIpBusiness.addDnsRecordsBatch(params);
         return ResponseData.successData("添加多条dns记录成功");
+    }
+
+    @PostMapping(path = "/addProxyIpToDbBatch")
+    public ResponseData<Void> addProxyIpToDbBatch(@RequestBody AddProxyIpToDbParams params) {
+        proxyIpBusiness.addProxyIpToDbBatch(params);
+        return ResponseData.successData("添加多个proxyIp到数据库成功");
     }
 }

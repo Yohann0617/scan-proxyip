@@ -1,5 +1,7 @@
 package com.proxyip.select.bean.params;
 
+import lombok.Data;
+
 import java.util.List;
 
 /**
@@ -9,15 +11,8 @@ import java.util.List;
  * @author: Yohann
  * @date: 2024/3/30 18:01
  */
+@Data
 public class RmFromDbParams {
 
     List<String> ids;
-
-    public List<String> getIds() {
-        return ids;
-    }
-
-    public void setIds(List<String> ids) {
-        this.ids = ids;
-    }
 }

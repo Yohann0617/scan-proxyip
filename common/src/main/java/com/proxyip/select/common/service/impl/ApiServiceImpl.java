@@ -2,6 +2,7 @@ package com.proxyip.select.common.service.impl;
 
 import com.proxyip.select.common.exception.BusinessException;
 import com.proxyip.select.common.service.IApiService;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
@@ -23,6 +24,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @since 2024/3/29 13:57
  */
 @Service
+@Slf4j
 public class ApiServiceImpl implements IApiService {
 
     /**
@@ -43,6 +45,15 @@ public class ApiServiceImpl implements IApiService {
             "xargs -n 1 -I {} curl -X DELETE \"https://api.cloudflare.com/client/v4/zones/%s/dns_records/{}\" " +
             "     -H \"Authorization: Bearer %s\" " +
             "     -H \"Content-Type: application/json\"";
+
+    /**
+     * cf删除指定代理域名的某个ip地址的dns记录api
+     */
+    private static String CF_REMOVE_SINGLE_DNS_RECORDS_API = "curl -X GET \"https://api.cloudflare.com/client/v4/zones/%s/dns_records?type=A&name=%s\" " +
+            "-H \"Authorization: Bearer %s\" " +
+            "-H \"Content-Type: application/json\" | jq -c '.result[] | select(.content == \"%s\") | .id' | xargs -n 1 -I {} curl -X DELETE \"https://api.cloudflare.com/client/v4/zones/%s/dns_records/{}\" " +
+            "-H \"Authorization: Bearer %s\" " +
+            "-H \"Content-Type: application/json\"";
 
     /**
      * 获取ip归属国家api
@@ -67,7 +78,7 @@ public class ApiServiceImpl implements IApiService {
                 String line;
                 while ((line = reader.readLine()) != null) {
                     if (line.contains("\"code\":1")) {
-                        System.out.println("√√√ 文件：" + filePath + " 已发送至个人网盘 √√√");
+                        log.info("√√√ 文件：{} 已发送至个人网盘 √√√", filePath);
                         break;
                     }
                 }
@@ -99,7 +110,7 @@ public class ApiServiceImpl implements IApiService {
                 // Wait for the process to finish
                 int exitCode = process.waitFor();
                 if (exitCode != 0) {
-                    System.out.println("Error executing nslookup command");
+                    log.error("Error executing nslookup command");
 //                    System.exit(1);
                 }
             } catch (Exception e) {
@@ -175,19 +186,19 @@ public class ApiServiceImpl implements IApiService {
 
 //        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 //            String line;
-//            System.out.println("add ------------------" + domainPrefix + "-------------------");
+//            log.info("add ------------------" + domainPrefix + "-------------------");
 //            while ((line = reader.readLine()) != null) {
-//                System.out.println(line);
+//                log.info(line);
 //            }
-//            System.out.println("add ------------------" + domainPrefix + "-------------------");
+//            log.info("add ------------------" + domainPrefix + "-------------------");
 //        }
 
             // Wait for the process to finish
             int exitCode = process.waitFor();
             if (exitCode != 0) {
-                System.out.println("Error executing addCfDnsRecords task");
+                log.error("Error executing addCfDnsRecords task");
             }
-//        System.out.println("域名：" + domainPrefix + "." + dnsCfg.getRootDomain() + " 的dns记录添加成功！ip地址：" + ipAddress);
+//        log.info("域名：" + domainPrefix + "." + dnsCfg.getRootDomain() + " 的dns记录添加成功！ip地址：" + ipAddress);
         } catch (Exception e) {
             e.printStackTrace();
             throw new BusinessException(-1, "添加cf记录失败：" + e.getLocalizedMessage());
@@ -204,15 +215,15 @@ public class ApiServiceImpl implements IApiService {
                 // Wait for the process to finish
                 int exitCode = process.waitFor();
                 if (exitCode != 0) {
-                    System.out.println("Error executing addCfDnsRecords task");
+                    log.error("Error executing removeCfDnsRecords task");
                 }
 //                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
 //                    String line;
-//                    System.out.println("rm ------------------" + proxyDomain + "-------------------");
+//                    log.info("rm ------------------" + proxyDomain + "-------------------");
 //                    while ((line = reader.readLine()) != null) {
-//                        System.out.println(line);
+//                        log.info(line);
 //                    }
-//                    System.out.println("rm ------------------" + proxyDomain + "-------------------");
+//                    log.info("rm ------------------" + proxyDomain + "-------------------");
 //                } catch (Exception e) {
 //                    e.printStackTrace();
 //                }
@@ -220,7 +231,25 @@ public class ApiServiceImpl implements IApiService {
                 e.printStackTrace();
                 throw new BusinessException(-1, "清除DNS记录失败：" + e.getLocalizedMessage());
             }
-            System.out.println("√√√ 域名：" + proxyDomain + "的dns记录已清除！ √√√");
+            log.info("√√√ 域名：{} 的dns记录已清除！ √√√", proxyDomain);
         });
+    }
+
+    @Override
+    public void removeCfSingleDnsRecords(String proxyDomain, String ip, String zoneId, String apiToken) {
+        String curlCommand = String.format(CF_REMOVE_SINGLE_DNS_RECORDS_API, zoneId, proxyDomain, apiToken, ip, zoneId, apiToken);
+        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+        try {
+            Process process = processBuilder.start();
+            // Wait for the process to finish
+            int exitCode = process.waitFor();
+            if (exitCode != 0) {
+                log.error("Error executing removeCfSingleDnsRecords task");
+            }
+        } catch (IOException | InterruptedException e) {
+            e.printStackTrace();
+            throw new BusinessException(-1, "清除DNS记录失败：" + e.getLocalizedMessage());
+        }
+        log.info("√√√ 域名：{} 的A记录ip：{} 的dns记录已清除！ √√√", proxyDomain, ip);
     }
 }

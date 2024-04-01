@@ -13,11 +13,15 @@ public interface IProxyIpBusiness {
 
     void rmAllDnsRecords();
 
-    void rmSingleDnsRecord(RmSingleDnsRecordParams params);
+    void rmSingleIpDnsRecord(RmSingleIpDnsRecordParams params);
 
-    void addSingleDnsRecord(AddSingleDnsRecordParams params);
+    void rmSingleDnsRecord(RmSingleDnsRecordParams params);
 
     void rmMoveFromDb(RmFromDbParams params);
 
+    void addSingleDnsRecord(AddSingleDnsRecordParams params);
+
     void addDnsRecordsBatch(AddDnsRecordsBatchParams params);
+
+    void addProxyIpToDbBatch(AddProxyIpToDbParams params);
 }
