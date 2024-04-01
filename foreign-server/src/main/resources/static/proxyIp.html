@@ -124,7 +124,7 @@
                 v-model="proxyDomain"
                 style="margin-top: 15px;"
                 class="input-with-select">
-        <el-select v-model="proxyDomain" slot="prepend" placeholder="请选择代理域名">
+        <el-select v-model="proxyDomain" slot="prepend" placeholder="请选择代理域名" style="width: 150px">
           <el-option label="美国" value="us"></el-option>
           <el-option label="英国" value="gb"></el-option>
           <el-option label="荷兰" value="nl"></el-option>
@@ -141,7 +141,7 @@
                 v-model="rmRecordIp"
                 style="margin-top: 15px;"
                 class="input-with-select">
-        <el-select v-model="rmRecordIpProxyDomain" slot="prepend" placeholder="请选择代理域名">
+        <el-select v-model="rmRecordIpProxyDomain" slot="prepend" placeholder="请选择代理域名" style="width: 150px">
           <el-option label="美国" value="us"></el-option>
           <el-option label="英国" value="gb"></el-option>
           <el-option label="荷兰" value="nl"></el-option>
@@ -265,7 +265,7 @@
         inputVisible: false,
         inputValue: '',
         rmRecordIp: '',
-        rmRecordIpProxyDomain:''
+        rmRecordIpProxyDomain: ''
       };
     },
     methods: {
