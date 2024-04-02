@@ -93,6 +93,13 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                                 subList -> {
                                     // 根据ping值排序
                                     subList.sort(Comparator.comparing(ProxyIp::getPingValue));
+                                    if (subList.size() < 5) {
+                                        List<ProxyIp> proxyIpList = proxyIpService.list(new LambdaQueryWrapper<ProxyIp>()
+                                                .eq(ProxyIp::getCountry, subList.get(0).getCountry())
+                                                .orderByAsc(ProxyIp::getPingValue)
+                                                .last("limit " + (5 - subList.size())));
+                                        subList.addAll(proxyIpList);
+                                    }
                                     return new ArrayList<>(subList.subList(0, Math.min(5, subList.size())));
                                 }
                         )));
