@@ -19,7 +19,6 @@ import javax.annotation.Resource;
 @Configuration
 public class CrossDomainFilter extends WebMvcConfigurationSupport {
 
-
     @Value("${front.dir}")
     private String frontDir;
     @Resource
@@ -49,7 +48,7 @@ public class CrossDomainFilter extends WebMvcConfigurationSupport {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/**").addResourceLocations(frontDir);
+        registry.addResourceHandler("/**").addResourceLocations("".equals(frontDir) ? "classpath:/static/" : frontDir);
         registry.addResourceHandler("/webjars/**").addResourceLocations(
                 "classpath:/META-INF/resources/webjars/");
         super.addResourceHandlers(registry);

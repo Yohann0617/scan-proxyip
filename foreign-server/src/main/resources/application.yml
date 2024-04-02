@@ -2,8 +2,8 @@ server:
   port: 8017
 
 front:
-  # dir: "file:///C:/Users/Administrator/Desktop/" # Windows
-  dir: "file:///app/front/" # Linux
+  # 支持前后端分离，默认不配置，则不分离 example: Windows: "file:///C:/Users/Administrator/Desktop/" Linux: "file:///app/front/"
+  dir:
 
 spring:
   datasource:
