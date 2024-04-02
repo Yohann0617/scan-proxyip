@@ -23,7 +23,7 @@ public class ProxyIpController {
     @Resource
     private IProxyIpBusiness proxyIpBusiness;
 
-    @PostMapping(path = "page")
+    @PostMapping(path = "/page")
     public ResponseData<IPage<ProxyIp>> page(@RequestBody ProxyIpPageParams params) {
         return ResponseData.successData(proxyIpBusiness.pageList(params), "获取分页成功");
     }

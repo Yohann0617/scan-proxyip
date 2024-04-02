@@ -1,5 +1,6 @@
 package com.proxyip.select.config.auth;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.CorsRegistry;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
@@ -18,6 +19,9 @@ import javax.annotation.Resource;
 @Configuration
 public class CrossDomainFilter extends WebMvcConfigurationSupport {
 
+
+    @Value("${front.dir}")
+    private String frontDir;
     @Resource
     private AuthInterceptor authInterceptor;
 
@@ -45,8 +49,7 @@ public class CrossDomainFilter extends WebMvcConfigurationSupport {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler("/**").addResourceLocations(
-                "classpath:/static/");
+        registry.addResourceHandler("/**").addResourceLocations(frontDir);
         registry.addResourceHandler("/webjars/**").addResourceLocations(
                 "classpath:/META-INF/resources/webjars/");
         super.addResourceHandlers(registry);

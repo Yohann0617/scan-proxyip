@@ -1,6 +1,10 @@
 server:
   port: 8017
 
+front:
+  # dir: "file:///C:/Users/Administrator/Desktop/" # Windows
+  dir: "file:///root/proxyip/front/" # Linux
+
 spring:
   datasource:
     type: com.alibaba.druid.pool.DruidDataSource
