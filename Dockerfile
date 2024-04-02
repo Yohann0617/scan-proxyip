@@ -20,7 +20,7 @@ RUN yum install -y bind-utils curl epel-release \
     && yum install -y jq \
     && yum clean all \
     && ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo Asia/Shanghai > /etc/timezone \
-    && mkdir -p /app && touch /app/scan.db
+    && mkdir -p /app/front/ && touch /app/scan.db && touch /app/front/proxyIp.html
 
 # 设置工作目录
 WORKDIR /app

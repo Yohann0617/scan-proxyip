@@ -3,7 +3,7 @@ server:
 
 front:
   # dir: "file:///C:/Users/Administrator/Desktop/" # Windows
-  dir: "file:///root/proxyip/front/" # Linux
+  dir: "file:///app/front/" # Linux
 
 spring:
   datasource:
