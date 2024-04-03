@@ -198,7 +198,7 @@
                       v-model="ipInfoParams"
                       class="input-with-select"
                       style="margin-top: 15px;">
-                <el-button slot="append" icon="el-icon-search" round @click="getIpInfo"></el-button>
+                <el-button slot="append" icon="el-icon-search" round @click="getIpInfo(ipInfoParams)"></el-button>
             </el-input>
         </el-collapse-item>
     </el-collapse>
@@ -236,9 +236,11 @@
                     <el-tag type="success" effect="warning">{{ scope.row.createTime }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column label="Action" fixed="right" width="120">
+            <el-table-column label="Action" fixed="right" width="250">
                 <template slot-scope="scope">
                     <el-button type="primary" round @click="addSingleDnsRecord(scope.row.ip)" size="mini">解析到CF
+                    </el-button>
+                    <el-button type="success" round @click="getIpInfo(scope.row.ip)" size="mini">获取IP信息
                     </el-button>
                 </template>
             </el-table-column>
@@ -296,8 +298,8 @@
                     })
                     .catch(error => console.error('Error searching data:', error));
             },
-            getIpInfo() {
-                axios.post(`${this.apiUrl}/proxyIp/getIpInfo`, {ip: this.ipInfoParams})
+            getIpInfo(ip) {
+                axios.post(`${this.apiUrl}/proxyIp/getIpInfo`, {ip: ip})
                     .then(response => {
                         const responseData = JSON.parse(response.data.data);
 
@@ -305,7 +307,7 @@
                         for (const key in responseData) {
                             formattedData += `| "${key}" : "${responseData[key]}"\n`;
                         }
-                        this.$alert(formattedData, 'IP：' + this.ipInfoParams, {
+                        this.$alert(formattedData, 'IP：' + ip+' 信息', {
                             confirmButtonText: '确定',
                             dangerouslyUseHTMLString: true, // 添加此行以允许 HTML 字符串
                             callback: action => {

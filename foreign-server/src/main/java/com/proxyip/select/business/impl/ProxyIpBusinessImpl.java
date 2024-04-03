@@ -22,6 +22,7 @@ import javax.annotation.Resource;
 import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -82,8 +83,7 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
     @Override
     public void addSingleDnsRecord(AddSingleDnsRecordParams params) {
         Optional.ofNullable(proxyIpService.getById(params.getId())).ifPresent(proxyIp -> {
-            String prefix = EnumUtils.getEnumByCode(CountryEnum.class, proxyIp.getCountry()).getLowCode() + "."
-                    + cloudflareCfg.getProxyDomainPrefix();
+            String prefix = proxyIp.getCountry().toLowerCase(Locale.ROOT) + "." + cloudflareCfg.getProxyDomainPrefix();
             apiService.addCfDnsRecords(
                     prefix,
                     proxyIp.getIp(),
@@ -102,8 +102,7 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
         Optional.ofNullable(proxyIpService.listByIds(params.getIds()))
                 .filter(CommonUtils::isNotEmpty).ifPresent(list -> {
                     list.parallelStream().forEach(proxyIp -> {
-                        String prefix = EnumUtils.getEnumByCode(CountryEnum.class, proxyIp.getCountry()).getLowCode() + "."
-                                + cloudflareCfg.getProxyDomainPrefix();
+                        String prefix = proxyIp.getCountry().toLowerCase(Locale.ROOT) + "." + cloudflareCfg.getProxyDomainPrefix();
                         apiService.addCfDnsRecords(
                                 prefix,
                                 proxyIp.getIp(),
