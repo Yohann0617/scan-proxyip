@@ -238,7 +238,7 @@
             </el-table-column>
             <el-table-column label="Action" fixed="right" width="250">
                 <template slot-scope="scope">
-                    <el-button type="primary" round @click="addSingleDnsRecord(scope.row.ip)" size="mini">解析到CF
+                    <el-button type="primary" round @click="addSingleDnsRecord(scope.row.id,scope.row.ip)" size="mini">解析到CF
                     </el-button>
                     <el-button type="success" round @click="getIpInfo(scope.row.ip)" size="mini">获取IP信息
                     </el-button>
@@ -307,7 +307,7 @@
                         for (const key in responseData) {
                             formattedData += `| "${key}" : "${responseData[key]}"\n`;
                         }
-                        this.$alert(formattedData, 'IP：' + ip+' 信息', {
+                        this.$alert(formattedData, 'IP：' + ip + ' 信息', {
                             confirmButtonText: '确定',
                             dangerouslyUseHTMLString: true, // 添加此行以允许 HTML 字符串
                             callback: action => {
@@ -337,7 +337,7 @@
                         .catch(error => console.error('Error deleting data:', error));
                 }
             },
-            async addSingleDnsRecord(ip) {
+            async addSingleDnsRecord(id, ip) {
                 if (confirm(`确定要解析ip： ${ip} 这条记录的到dns记录中吗？`)) {
                     await axios.post(`${this.apiUrl}/proxyIp/addSingleDnsRecord`, {id: id})
                         .then(response => {
