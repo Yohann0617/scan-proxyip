@@ -6,6 +6,11 @@
     <title>代理IP列表</title>
     <!-- 引入 Element UI 的 CSS 文件 -->
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入 Vue.js 及 Element UI 的 JS 文件 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <!-- 引入 Axios 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         body {
             text-align: center;
@@ -224,7 +229,7 @@
             </el-table-column>
             <el-table-column label="Action" fixed="right" width="120">
                 <template slot-scope="scope">
-                    <el-button type="primary" round @click="addSingleDnsRecord(scope.row.id)" size="mini">解析到CF
+                    <el-button type="primary" round @click="addSingleDnsRecord(scope.row.ip)" size="mini">解析到CF
                     </el-button>
                 </template>
             </el-table-column>
@@ -243,11 +248,7 @@
     </div>
 </div>
 
-<!-- 引入 Vue.js 及 Element UI 的 JS 文件 -->
-<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-<script src="https://unpkg.com/element-ui/lib/index.js"></script>
-<!-- 引入 Axios 库 -->
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
 <script>
     axios.defaults.headers.post['Content-Type'] = 'application/json';
 
@@ -304,8 +305,8 @@
                         .catch(error => console.error('Error deleting data:', error));
                 }
             },
-            async addSingleDnsRecord(id) {
-                if (confirm(`确定要添加id： ${id} 这条记录的ip地址到dns记录中吗？`)) {
+            async addSingleDnsRecord(ip) {
+                if (confirm(`确定要解析ip： ${ip} 这条记录的到dns记录中吗？`)) {
                     await axios.post(`${this.apiUrl}/proxyIp/addSingleDnsRecord`, {id: id})
                         .then(response => {
                             if (response.data.success) {
