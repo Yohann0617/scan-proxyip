@@ -49,9 +49,11 @@ public class ApiServiceImpl implements IApiService {
     /**
      * cf删除指定代理域名的某个ip地址的dns记录api
      */
-    private static String CF_REMOVE_SINGLE_DNS_RECORDS_API = "curl -X GET \"https://api.cloudflare.com/client/v4/zones/%s/dns_records?type=A&name=%s\" " +
+    private static String CF_REMOVE_SINGLE_DNS_RECORDS_API = "curl -X GET \"https://api.cloudflare" +
+            ".com/client/v4/zones/%s/dns_records?type=A&name=%s\" " +
             "-H \"Authorization: Bearer %s\" " +
-            "-H \"Content-Type: application/json\" | jq -c '.result[] | select(.content == \"%s\") | .id' | xargs -n 1 -I {} curl -X DELETE \"https://api.cloudflare.com/client/v4/zones/%s/dns_records/{}\" " +
+            "-H \"Content-Type: application/json\" | jq -c '.result[] | select(.content == \"%s\") | .id' | xargs -n 1 -I {} curl -X DELETE " +
+            "\"https://api.cloudflare.com/client/v4/zones/%s/dns_records/{}\" " +
             "-H \"Authorization: Bearer %s\" " +
             "-H \"Content-Type: application/json\"";
 
@@ -251,5 +253,34 @@ public class ApiServiceImpl implements IApiService {
             throw new BusinessException(-1, "清除DNS记录失败：" + e.getLocalizedMessage());
         }
         log.info("√√√ 域名：{} 的A记录ip：{} 的dns记录已清除！ √√√", proxyDomain, ip);
+    }
+
+    @Override
+    public String getIpInfo(String ipAddress, String geoIpAuth) {
+        StringBuilder sb = new StringBuilder();
+
+        String curlCommand;
+        // 不使用GeoIP2
+        if ("".equals(geoIpAuth)) {
+            curlCommand = String.format(GET_IP_LOCATION_API, ipAddress);
+        } else {
+            curlCommand = String.format(GET_GEO_IP_LOCATION_API, ipAddress, geoIpAuth);
+        }
+
+        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+        try {
+            Process process = processBuilder.start();
+            // Read the output of the command
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return sb.toString();
     }
 }

@@ -24,4 +24,6 @@ public interface IProxyIpBusiness {
     void addDnsRecordsBatch(AddDnsRecordsBatchParams params);
 
     void addProxyIpToDbBatch(AddProxyIpToDbParams params);
+
+    String getIpInfo(GetIpInfoParams ip);
 }

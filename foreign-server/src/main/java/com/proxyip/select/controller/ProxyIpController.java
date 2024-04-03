@@ -69,4 +69,9 @@ public class ProxyIpController {
         proxyIpBusiness.addProxyIpToDbBatch(params);
         return ResponseData.successData("添加多个proxyIp到数据库成功");
     }
+
+    @PostMapping(path = "/getIpInfo")
+    public ResponseData<String> getIpInfo(@RequestBody GetIpInfoParams params) {
+        return ResponseData.successData(proxyIpBusiness.getIpInfo(params), "获取IP信息成功");
+    }
 }

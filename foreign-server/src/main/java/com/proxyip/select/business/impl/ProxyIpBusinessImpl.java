@@ -16,7 +16,6 @@ import com.proxyip.select.common.utils.IdGen;
 import com.proxyip.select.common.utils.NetUtils;
 import com.proxyip.select.config.CloudflareCfg;
 import com.proxyip.select.config.DnsCfg;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
@@ -102,43 +101,48 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
     public void addDnsRecordsBatch(AddDnsRecordsBatchParams params) {
         Optional.ofNullable(proxyIpService.listByIds(params.getIds()))
                 .filter(CommonUtils::isNotEmpty).ifPresent(list -> {
-            list.parallelStream().forEach(proxyIp -> {
-                String prefix = EnumUtils.getEnumByCode(CountryEnum.class, proxyIp.getCountry()).getLowCode() + "."
-                        + cloudflareCfg.getProxyDomainPrefix();
-                apiService.addCfDnsRecords(
-                        prefix,
-                        proxyIp.getIp(),
-                        cloudflareCfg.getZoneId(),
-                        cloudflareCfg.getApiToken());
-            });
-        });
+                    list.parallelStream().forEach(proxyIp -> {
+                        String prefix = EnumUtils.getEnumByCode(CountryEnum.class, proxyIp.getCountry()).getLowCode() + "."
+                                + cloudflareCfg.getProxyDomainPrefix();
+                        apiService.addCfDnsRecords(
+                                prefix,
+                                proxyIp.getIp(),
+                                cloudflareCfg.getZoneId(),
+                                cloudflareCfg.getApiToken());
+                    });
+                });
     }
 
     @Override
     public void addProxyIpToDbBatch(AddProxyIpToDbParams params) {
         Optional.ofNullable(params.getIpList())
                 .filter(CommonUtils::isNotEmpty).ifPresent(ipList -> {
-            List<ProxyIp> list = ipList.parallelStream()
-                    .map(String::trim)
-                    .map(ip -> {
-                        // 获取国家代码
-                        String countryCode = apiService.getIpCountry(ip, dnsCfg.getGeoipAuth());
-                        if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
-                            countryCode = apiService.getIpCountry(ip);
-                        }
+                    List<ProxyIp> list = ipList.parallelStream()
+                            .map(String::trim)
+                            .map(ip -> {
+                                // 获取国家代码
+                                String countryCode = apiService.getIpCountry(ip, dnsCfg.getGeoipAuth());
+                                if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
+                                    countryCode = apiService.getIpCountry(ip);
+                                }
 
-                        ProxyIp proxyIp = new ProxyIp();
-                        proxyIp.setId(String.valueOf(idGen.nextId()));
-                        proxyIp.setCountry(countryCode);
-                        proxyIp.setIp(ip);
-                        Integer pingValue = NetUtils.getPingValue(ip);
-                        proxyIp.setPingValue(pingValue == null ? 999999 : pingValue);
-                        proxyIp.setCreateTime(LocalDateTime.now());
-                        return proxyIp;
-                    }).collect(Collectors.toList());
-            list.removeIf(x -> Optional.ofNullable(proxyIpService.getOne(new LambdaQueryWrapper<ProxyIp>()
-                    .eq(ProxyIp::getIp, x.getIp()))).isPresent());
-            proxyIpService.saveBatch(list);
-        });
+                                ProxyIp proxyIp = new ProxyIp();
+                                proxyIp.setId(String.valueOf(idGen.nextId()));
+                                proxyIp.setCountry(countryCode);
+                                proxyIp.setIp(ip);
+                                Integer pingValue = NetUtils.getPingValue(ip);
+                                proxyIp.setPingValue(pingValue == null ? 999999 : pingValue);
+                                proxyIp.setCreateTime(LocalDateTime.now());
+                                return proxyIp;
+                            }).collect(Collectors.toList());
+                    list.removeIf(x -> Optional.ofNullable(proxyIpService.getOne(new LambdaQueryWrapper<ProxyIp>()
+                            .eq(ProxyIp::getIp, x.getIp()))).isPresent());
+                    proxyIpService.saveBatch(list);
+                });
+    }
+
+    @Override
+    public String getIpInfo(GetIpInfoParams params) {
+        return apiService.getIpInfo(params.getIp(), "");
     }
 }

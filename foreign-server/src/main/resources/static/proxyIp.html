@@ -190,7 +190,16 @@
                 <el-button @click="addProxyIpToDbBatch" type="success" style="margin-top: 15px; ">添加proxyIp到数据库
                 </el-button>
             </el-collapse-item>
+        </el-collapse-item>
 
+        <el-collapse-item title="+ 点击选择查询操作" name="3">
+            <el-input clearable
+                      placeholder="输入ip地址查询信息"
+                      v-model="ipInfoParams"
+                      class="input-with-select"
+                      style="margin-top: 15px;">
+                <el-button slot="append" icon="el-icon-search" round @click="getIpInfo"></el-button>
+            </el-input>
         </el-collapse-item>
     </el-collapse>
     <div class="my_table">
@@ -271,13 +280,12 @@
                 inputVisible: false,
                 inputValue: '',
                 rmRecordIp: '',
-                rmRecordIpProxyDomain: ''
+                rmRecordIpProxyDomain: '',
+                ipInfoParams: ''
             };
         },
         methods: {
             search() {
-                // 发送搜索请求到后端
-                // 替换为实际的后端接口地址
                 axios.post(`${this.apiUrl}/proxyIp/page`, {
                     ...this.pageParams
                 })
@@ -285,6 +293,28 @@
                         this.pageParams.total = response.data.data.total;
                         this.tableData = response.data.data.records;
                         this.loading = false;
+                    })
+                    .catch(error => console.error('Error searching data:', error));
+            },
+            getIpInfo() {
+                axios.post(`${this.apiUrl}/proxyIp/getIpInfo`, {ip: this.ipInfoParams})
+                    .then(response => {
+                        const responseData = JSON.parse(response.data.data);
+
+                        let formattedData = "";
+                        for (const key in responseData) {
+                            formattedData += `| "${key}" : "${responseData[key]}"\n`;
+                        }
+                        this.$alert(formattedData, 'IP：' + this.ipInfoParams, {
+                            confirmButtonText: '确定',
+                            dangerouslyUseHTMLString: true, // 添加此行以允许 HTML 字符串
+                            callback: action => {
+                                // this.$message({
+                                //   type: 'info',
+                                //   message: `action: ${action}`
+                                // });
+                            }
+                        });
                     })
                     .catch(error => console.error('Error searching data:', error));
             },
