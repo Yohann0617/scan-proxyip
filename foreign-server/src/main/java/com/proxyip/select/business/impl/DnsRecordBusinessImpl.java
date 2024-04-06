@@ -1,5 +1,6 @@
 package com.proxyip.select.business.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.proxyip.select.common.bean.ProxyIp;
 import com.proxyip.select.common.service.IApiService;
@@ -8,7 +9,6 @@ import com.proxyip.select.common.utils.IdGen;
 import com.proxyip.select.common.utils.NetUtils;
 import com.proxyip.select.common.enums.EnumUtils;
 import com.proxyip.select.common.enums.dict.CountryEnum;
-import com.proxyip.select.common.utils.CommonUtils;
 import com.proxyip.select.config.CloudflareCfg;
 import com.proxyip.select.config.DnsCfg;
 import com.proxyip.select.business.IDnsRecordBusiness;
@@ -55,6 +55,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
         List<String> releaseIps = dnsCfg.getReleaseIps();
         // 添加常年稳定的ip
         ipAddresses.addAll(releaseIps);
+        log.info("√√√ 共获取到{}个proxyIp √√√", ipAddresses.size());
         List<ProxyIp> list = ipAddresses.parallelStream()
                 .filter(x -> {
                     if (releaseIps.contains(x)) {
@@ -98,7 +99,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                                                         .eq(ProxyIp::getCountry, subList.get(0).getCountry())
                                                         .orderByAsc(ProxyIp::getPingValue)
                                                         .last("limit " + (5 - subList.size()))))
-                                                .filter(CommonUtils::isNotEmpty).orElseGet(Collections::emptyList).stream()
+                                                .filter(CollectionUtil::isNotEmpty).orElseGet(Collections::emptyList).stream()
                                                 .filter(x -> !subList.contains(x))
                                                 .collect(Collectors.toList()));
                                     }
@@ -113,7 +114,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                         .eq(ProxyIp::getCountry, countryCode)
                         .orderByAsc(ProxyIp::getPingValue)
                         .last("limit 5"));
-                if (CommonUtils.isNotEmpty(proxyIpList)) {
+                if (CollectionUtil.isNotEmpty(proxyIpList)) {
                     ipGroupByCountryMap.put(countryCode, proxyIpList);
                 }
             }
@@ -217,12 +218,12 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
     public void rmIpInDb() {
         log.info("当前时间：{}，开始清除数据库中无效的ip...", getNowDateTime());
         List<String> voidIdList = Optional.ofNullable(proxyIpService.list())
-                .filter(CommonUtils::isNotEmpty).orElseGet(Collections::emptyList).parallelStream()
+                .filter(CollectionUtil::isNotEmpty).orElseGet(Collections::emptyList).parallelStream()
                 .filter(x -> !dnsCfg.getReleaseIps().contains(x.getIp()))
                 .filter(x -> !NetUtils.getPingResult(x.getIp()))
                 .map(ProxyIp::getId)
                 .collect(Collectors.toList());
-        if (CommonUtils.isNotEmpty(voidIdList)) {
+        if (CollectionUtil.isNotEmpty(voidIdList)) {
             proxyIpService.removeByIds(voidIdList);
         }
         log.info("√√√ 清除数据库中无效ip任务已完成 √√√");
@@ -233,14 +234,16 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
         log.info("当前时间：{}，开始更新DNS记录...", getNowDateTime());
         long begin = System.currentTimeMillis();
         // 获取proxyIps
-        List<String> ipAddresses = apiService.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
+        List<String> proxyIpsFromDomain = apiService.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
+        List<String> proxyIpsFromZip = apiService.getProxyIpFromZip(dnsCfg.getZipUrl(), dnsCfg.getZipPorts());
+        proxyIpsFromDomain.addAll(proxyIpsFromZip);
 
-        if (ipAddresses.size() != 0) {
+        if (proxyIpsFromDomain.size() != 0) {
             // 清除dns旧记录
             rmCfDnsRecords();
 
             // 添加DNS记录并保存到文件
-            addLimitDnsRecordAndWriteToFile(ipAddresses, dnsCfg.getOutPutFile());
+            addLimitDnsRecordAndWriteToFile(proxyIpsFromDomain, dnsCfg.getOutPutFile());
         }
 
         long end = System.currentTimeMillis();
@@ -258,13 +261,13 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
     public void updateIpPingValueInDb() {
         log.info("当前时间：{}，开始更新数据库中ip的ping值...", getNowDateTime());
         List<ProxyIp> proxyIpList = Optional.ofNullable(proxyIpService.list())
-                .filter(CommonUtils::isNotEmpty).orElseGet(Collections::emptyList).parallelStream()
+                .filter(CollectionUtil::isNotEmpty).orElseGet(Collections::emptyList).parallelStream()
                 .peek(x -> {
                     Integer pingValue = NetUtils.getPingValue(x.getIp());
                     x.setPingValue(pingValue == null ? 999999 : pingValue);
                 })
                 .collect(Collectors.toList());
-        if (CommonUtils.isNotEmpty(proxyIpList)) {
+        if (CollectionUtil.isNotEmpty(proxyIpList)) {
             proxyIpService.updateBatchById(proxyIpList);
         }
         log.info("√√√ 更新数据库中ip的ping值任务已完成 √√√");

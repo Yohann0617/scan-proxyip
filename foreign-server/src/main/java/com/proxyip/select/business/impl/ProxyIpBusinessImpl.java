@@ -1,5 +1,6 @@
 package com.proxyip.select.business.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -11,7 +12,6 @@ import com.proxyip.select.common.enums.EnumUtils;
 import com.proxyip.select.common.enums.dict.CountryEnum;
 import com.proxyip.select.common.service.IApiService;
 import com.proxyip.select.common.service.IProxyIpService;
-import com.proxyip.select.common.utils.CommonUtils;
 import com.proxyip.select.common.utils.IdGen;
 import com.proxyip.select.common.utils.NetUtils;
 import com.proxyip.select.config.CloudflareCfg;
@@ -100,7 +100,7 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
     @Override
     public void addDnsRecordsBatch(AddDnsRecordsBatchParams params) {
         Optional.ofNullable(proxyIpService.listByIds(params.getIds()))
-                .filter(CommonUtils::isNotEmpty).ifPresent(list -> {
+                .filter(CollectionUtil::isNotEmpty).ifPresent(list -> {
                     list.parallelStream().forEach(proxyIp -> {
                         String prefix = proxyIp.getCountry().toLowerCase(Locale.ROOT) + "." + cloudflareCfg.getProxyDomainPrefix();
                         apiService.addCfDnsRecords(
@@ -115,7 +115,7 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
     @Override
     public void addProxyIpToDbBatch(AddProxyIpToDbParams params) {
         Optional.ofNullable(params.getIpList())
-                .filter(CommonUtils::isNotEmpty).ifPresent(ipList -> {
+                .filter(CollectionUtil::isNotEmpty).ifPresent(ipList -> {
                     List<ProxyIp> list = ipList.parallelStream()
                             .map(String::trim)
                             .map(ip -> {

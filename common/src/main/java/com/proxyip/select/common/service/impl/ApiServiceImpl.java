@@ -1,5 +1,10 @@
 package com.proxyip.select.common.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.ZipUtil;
+import cn.hutool.http.HttpUtil;
 import com.proxyip.select.common.exception.BusinessException;
 import com.proxyip.select.common.service.IApiService;
 import lombok.extern.slf4j.Slf4j;
@@ -7,13 +12,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -92,6 +96,10 @@ public class ApiServiceImpl implements IApiService {
 
     @Override
     public List<String> resolveDomain(List<String> domainList, String dnsServer) {
+        if (CollectionUtil.isEmpty(domainList)) {
+            return new ArrayList<>();
+        }
+
         Set<String> ipAddresses = new HashSet<>();
         domainList.stream().parallel().forEach(domain -> {
             ProcessBuilder processBuilder = new ProcessBuilder("nslookup", domain, dnsServer);
@@ -282,5 +290,34 @@ public class ApiServiceImpl implements IApiService {
         }
 
         return sb.toString();
+    }
+
+    @Override
+    public List<String> getProxyIpFromZip(String zipUrl, List<Integer> ports) {
+        if (StrUtil.isBlank(zipUrl)) {
+            return new ArrayList<>();
+        }
+
+        String downloadPath = null;
+        File unzip = null;
+        try {
+            // 设置下载路径
+            downloadPath = System.getProperty("user.dir") + "/ip.zip";
+            // 发送GET请求并下载文件
+            HttpUtil.downloadFile(zipUrl, downloadPath);
+
+            unzip = ZipUtil.unzip(downloadPath);
+            return Arrays.stream(Objects.requireNonNull(unzip.listFiles())).parallel()
+                    .filter(file -> ports.contains(Integer.valueOf(file.getName().split("\\.")[0].split("-")[2])))
+                    .map(FileUtil::readUtf8Lines)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("获取URL{}压缩包文件内容失败", zipUrl);
+        } finally {
+            FileUtil.del(downloadPath);
+            FileUtil.del(unzip);
+        }
+        return null;
     }
 }
