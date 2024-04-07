@@ -206,42 +206,51 @@
         <el-table class="my_table"
                   :data="tableData"
                   style="width: 100%"
-                  border height="350"
+                  border height="360"
                   v-loading="loading"
                   stripe
                   @select="handleSelect" @select-all="handleSelectAll">
             <el-table-column type="selection" fixed="left"></el-table-column>
+
+            <el-table-column prop="ip" label="IP" width="200" sortable>
+                <template slot-scope="scope">
+                    <el-tag type="success" effect="plain">{{ scope.row.ip }}</el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column prop="country" label="Country" width="200" sortable>
+                <template slot-scope="scope">
+                    <el-tag type="success" effect="light">{{ scope.row.country }}</el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column prop="pingValue" label="PingValue" width="200" sortable>
+                <template slot-scope="scope">
+                    <el-tag type="success" effect="dark">{{ scope.row.pingValue }}</el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column prop="createTime" label="CreateTime" width="500" sortable>
+                <template slot-scope="scope">
+                    <el-tag type="success" effect="warning">{{ scope.row.createTime }}</el-tag>
+                </template>
+            </el-table-column>
             <el-table-column prop="id" label="ID" width="500">
                 <template slot-scope="scope">
                     <el-tag type="info">{{ scope.row.id }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column prop="country" label="Country" width="500">
+
+            <el-table-column label="Action" fixed="right" width="130">
                 <template slot-scope="scope">
-                    <el-tag type="success" effect="light">{{ scope.row.country }}</el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column prop="ip" label="IP" width="500">
-                <template slot-scope="scope">
-                    <el-tag type="success" effect="plain">{{ scope.row.ip }}</el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column prop="pingValue" label="PingValue" width="500" sortable>
-                <template slot-scope="scope">
-                    <el-tag type="success" effect="dark">{{ scope.row.pingValue }}</el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column prop="createTime" label="CreateTime" width="500">
-                <template slot-scope="scope">
-                    <el-tag type="success" effect="warning">{{ scope.row.createTime }}</el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column label="Action" fixed="right" width="250">
-                <template slot-scope="scope">
-                    <el-button type="primary" round @click="addSingleDnsRecord(scope.row.id,scope.row.ip)" size="mini">解析到CF
-                    </el-button>
-                    <el-button type="success" round @click="getIpInfo(scope.row.ip)" size="mini">获取IP信息
-                    </el-button>
+                    <el-tooltip class="item" effect="dark" content="解析到CF" placement="top-start">
+                        <el-button type="primary" icon="el-icon-upload2" round
+                                   @click="addSingleDnsRecord(scope.row.id,scope.row.ip)" size="mini">
+                        </el-button>
+                    </el-tooltip>
+
+                    <el-tooltip class="item" effect="dark" content="获取IP信息" placement="top-start">
+                        <el-button type="success" icon="el-icon-info" round @click="getIpInfo(scope.row.ip)"
+                                   size="mini">
+                        </el-button>
+                    </el-tooltip>
                 </template>
             </el-table-column>
         </el-table>
@@ -252,7 +261,7 @@
                 :current-page="pageParams.currentPage"
                 :page-size="pageParams.pageSize"
                 :total="pageParams.total"
-                :page-sizes="[5, 10, 15, 20, 100, 300]"
+                :page-sizes="[5, 25, 50, 100, 300]"
                 layout="total, sizes, prev, pager, next, jumper"
         >
         </el-pagination>
