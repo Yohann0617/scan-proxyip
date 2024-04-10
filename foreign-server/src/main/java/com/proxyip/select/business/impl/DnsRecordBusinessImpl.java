@@ -234,8 +234,8 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
         log.info("当前时间：{}，开始更新DNS记录...", getNowDateTime());
         long begin = System.currentTimeMillis();
         // 获取proxyIps
-        List<String> proxyIpsFromDomain = apiService.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
         List<String> proxyIpsFromZip = apiService.getProxyIpFromZip(dnsCfg.getZipUrl(), dnsCfg.getZipPorts());
+        List<String> proxyIpsFromDomain = apiService.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
         proxyIpsFromDomain.addAll(proxyIpsFromZip);
 
         if (proxyIpsFromDomain.size() != 0) {
