@@ -31,4 +31,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: true
           file: ./Dockerfile
-          tags: ghcr.io/Yohann0617/scan-proxyip:latest
+          tags: ghcr.io/yohannfan/scan-proxyip:latest
