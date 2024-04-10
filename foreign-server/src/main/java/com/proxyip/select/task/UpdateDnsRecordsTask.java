@@ -60,7 +60,7 @@ public class UpdateDnsRecordsTask implements ApplicationRunner {
         }
 
         // 执行定时任务
-        taskScheduler.schedule(dnsRecordBusiness::updateDbTask, new CronTrigger("0 0 0 * * ?"));
+        taskScheduler.schedule(dnsRecordBusiness::updateDbTask, new CronTrigger("0 1 0 * * ?"));
         taskScheduler.schedule(dnsRecordBusiness::updateProxyIpTask, new CronTrigger(dnsCfg.getCron()));
     }
 }
