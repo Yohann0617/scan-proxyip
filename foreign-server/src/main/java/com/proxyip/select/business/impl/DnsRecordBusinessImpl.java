@@ -81,8 +81,8 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                 }).collect(Collectors.toList());
 
         // 持久化到数据库
-        list.removeIf(x -> Optional.ofNullable(proxyIpService.getOne(new LambdaQueryWrapper<ProxyIp>()
-                .eq(ProxyIp::getIp, x.getIp()))).isPresent());
+        list.removeIf(x -> proxyIpService.getOne(new LambdaQueryWrapper<ProxyIp>()
+                .eq(ProxyIp::getIp, x.getIp())) != null);
         proxyIpService.saveBatch(list);
 
         // 分组并保留五条记录
@@ -96,9 +96,9 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                                     subList.sort(Comparator.comparing(ProxyIp::getPingValue));
                                     if (subList.size() < 5) {
                                         subList.addAll(Optional.ofNullable(proxyIpService.list(new LambdaQueryWrapper<ProxyIp>()
-                                                        .eq(ProxyIp::getCountry, subList.get(0).getCountry())
-                                                        .orderByAsc(ProxyIp::getPingValue)
-                                                        .last("limit " + (5 - subList.size()))))
+                                                .eq(ProxyIp::getCountry, subList.get(0).getCountry())
+                                                .orderByAsc(ProxyIp::getPingValue)
+                                                .last("limit " + (5 - subList.size()))))
                                                 .filter(CollectionUtil::isNotEmpty).orElseGet(Collections::emptyList).stream()
                                                 .filter(x -> !subList.contains(x))
                                                 .collect(Collectors.toList()));
@@ -125,12 +125,12 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                 .flatMap(List::stream)
                 .collect(Collectors.toList())
                 .parallelStream().forEach(x -> {
-                    if (countryCodeList.contains(x.getCountry())) {
-                        String prefix =
-                                EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
-                        apiService.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
-                    }
-                });
+            if (countryCodeList.contains(x.getCountry())) {
+                String prefix =
+                        EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
+                apiService.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+            }
+        });
         log.info("√√√ 所有DNS记录添加完成!!! √√√");
 
         // 写入文件
@@ -237,13 +237,14 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
         List<String> proxyIpsFromZip = apiService.getProxyIpFromZip(dnsCfg.getZipUrl(), dnsCfg.getZipPorts());
         List<String> proxyIpsFromDomain = apiService.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
         proxyIpsFromDomain.addAll(proxyIpsFromZip);
+        Set<String> set = new HashSet<>(proxyIpsFromDomain);
 
-        if (proxyIpsFromDomain.size() != 0) {
+        if (set.size() != 0) {
             // 清除dns旧记录
             rmCfDnsRecords();
 
             // 添加DNS记录并保存到文件
-            addLimitDnsRecordAndWriteToFile(proxyIpsFromDomain, dnsCfg.getOutPutFile());
+            addLimitDnsRecordAndWriteToFile(new ArrayList<>(set), dnsCfg.getOutPutFile());
         }
 
         long end = System.currentTimeMillis();
