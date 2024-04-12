@@ -122,10 +122,6 @@
               style="margin-top: 15px;"
               @focus="handleFocus"
               @input="search">
-        <el-select v-model="pageParams.keyword" slot="prepend" placeholder="请选择代理域名" style="width: 150px">
-            <el-option v-for="country in countryList" :key="country.first" :label="country.first"
-                       :value="country.third"></el-option>
-        </el-select>
         <el-button slot="append" icon="el-icon-search" round @click="search"></el-button>
     </el-input>
     <el-collapse style="margin-top: 15px; margin-bottom: 15px;">
@@ -135,8 +131,15 @@
                       style="margin-top: 15px;"
                       class="input-with-select">
                 <el-select v-model="proxyDomain" slot="prepend" placeholder="请选择代理域名" style="width: 150px">
-                    <el-option v-for="country in countryList" :key="country.first" :label="country.first"
-                               :value="country.third"></el-option>
+                    <el-option label="美国" value="us"></el-option>
+                    <el-option label="英国" value="gb"></el-option>
+                    <el-option label="荷兰" value="nl"></el-option>
+                    <el-option label="德国" value="de"></el-option>
+                    <el-option label="香港" value="hk"></el-option>
+                    <el-option label="澳门" value="mo"></el-option>
+                    <el-option label="新加坡" value="sg"></el-option>
+                    <el-option label="韩国" value="kr"></el-option>
+                    <el-option label="日本" value="jp"></el-option>
                 </el-select>
                 <el-button slot="append" icon="el-icon-delete" round @click="deleteDnsRecord"></el-button>
             </el-input>
@@ -145,8 +148,15 @@
                       style="margin-top: 15px;"
                       class="input-with-select">
                 <el-select v-model="rmRecordIpProxyDomain" slot="prepend" placeholder="请选择代理域名" style="width: 150px">
-                    <el-option v-for="country in countryList" :key="country.first" :label="country.first"
-                               :value="country.third"></el-option>
+                    <el-option label="美国" value="us"></el-option>
+                    <el-option label="英国" value="gb"></el-option>
+                    <el-option label="荷兰" value="nl"></el-option>
+                    <el-option label="德国" value="de"></el-option>
+                    <el-option label="香港" value="hk"></el-option>
+                    <el-option label="澳门" value="mo"></el-option>
+                    <el-option label="新加坡" value="sg"></el-option>
+                    <el-option label="韩国" value="kr"></el-option>
+                    <el-option label="日本" value="jp"></el-option>
                 </el-select>
                 <el-button slot="append" icon="el-icon-delete" round @click="rmSingleIpDnsRecord"></el-button>
             </el-input>
@@ -207,13 +217,7 @@
                     <el-tag type="success" effect="plain">{{ scope.row.ip }}</el-tag>
                 </template>
             </el-table-column>
-<!--            filters="filterList"-->
-<!--            :filter-method="filterTag"-->
-<!--            filter-placement="bottom-end"-->
-            <el-table-column prop="country"
-                             label="Country"
-                             width="200" sortable
-            >
+            <el-table-column prop="country" label="Country" width="200" sortable>
                 <template slot-scope="scope">
                     <el-tag type="success" effect="light">{{ scope.row.country }}</el-tag>
                 </template>
@@ -272,7 +276,7 @@
         el: '#app',
         data() {
             return {
-                apiUrl: 'https://kxswmnt.yohann.dedyn.io/api',
+                apiUrl: window.location.href + '/api',
                 pageParams: {
                     keyword: '',
                     currentPage: 1,
@@ -288,9 +292,7 @@
                 inputValue: '',
                 rmRecordIp: '',
                 rmRecordIpProxyDomain: '',
-                ipInfoParams: '',
-                countryList: [],
-                filterList: []
+                ipInfoParams: ''
             };
         },
         methods: {
@@ -324,17 +326,6 @@
                                 // });
                             }
                         });
-                    })
-                    .catch(error => console.error('Error searching data:', error));
-            },
-            getCountryList() {
-                axios.post(`${this.apiUrl}/proxyIp/getCountryList`, {})
-                    .then(response => {
-                        this.countryList = response.data.data;
-                        // let formattedData = response.data.data.map(tuple => {
-                        //     return { text: tuple.first, value: tuple.second };
-                        // });
-                        // console.log(formattedData);
                     })
                     .catch(error => console.error('Error searching data:', error));
             },
@@ -487,20 +478,9 @@
                 this.pageParams.currentPage = 1;
                 this.search();
             }
-            , clearFilter() {
-                this.$refs.filterTable.clearFilter();
-            },
-            filterTag(value, row) {
-                return row.country === value;
-            },
-            filterHandler(value, row, column) {
-                const property = column['property'];
-                return row[property] === value;
-            }
         },
         mounted() {
             this.search();
-            this.getCountryList();
         }
     });
 
