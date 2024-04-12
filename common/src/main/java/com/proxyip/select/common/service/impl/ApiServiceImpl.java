@@ -1,5 +1,10 @@
 package com.proxyip.select.common.service.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.core.util.ZipUtil;
+import cn.hutool.http.HttpUtil;
 import com.proxyip.select.common.exception.BusinessException;
 import com.proxyip.select.common.service.IApiService;
 import lombok.extern.slf4j.Slf4j;
@@ -7,13 +12,12 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 /**
  * <p>
@@ -49,9 +53,11 @@ public class ApiServiceImpl implements IApiService {
     /**
      * cf删除指定代理域名的某个ip地址的dns记录api
      */
-    private static String CF_REMOVE_SINGLE_DNS_RECORDS_API = "curl -X GET \"https://api.cloudflare.com/client/v4/zones/%s/dns_records?type=A&name=%s\" " +
+    private static String CF_REMOVE_SINGLE_DNS_RECORDS_API = "curl -X GET \"https://api.cloudflare" +
+            ".com/client/v4/zones/%s/dns_records?type=A&name=%s\" " +
             "-H \"Authorization: Bearer %s\" " +
-            "-H \"Content-Type: application/json\" | jq -c '.result[] | select(.content == \"%s\") | .id' | xargs -n 1 -I {} curl -X DELETE \"https://api.cloudflare.com/client/v4/zones/%s/dns_records/{}\" " +
+            "-H \"Content-Type: application/json\" | jq -c '.result[] | select(.content == \"%s\") | .id' | xargs -n 1 -I {} curl -X DELETE " +
+            "\"https://api.cloudflare.com/client/v4/zones/%s/dns_records/{}\" " +
             "-H \"Authorization: Bearer %s\" " +
             "-H \"Content-Type: application/json\"";
 
@@ -90,6 +96,10 @@ public class ApiServiceImpl implements IApiService {
 
     @Override
     public List<String> resolveDomain(List<String> domainList, String dnsServer) {
+        if (CollectionUtil.isEmpty(domainList)) {
+            return new ArrayList<>();
+        }
+
         Set<String> ipAddresses = new HashSet<>();
         domainList.stream().parallel().forEach(domain -> {
             ProcessBuilder processBuilder = new ProcessBuilder("nslookup", domain, dnsServer);
@@ -251,5 +261,63 @@ public class ApiServiceImpl implements IApiService {
             throw new BusinessException(-1, "清除DNS记录失败：" + e.getLocalizedMessage());
         }
         log.info("√√√ 域名：{} 的A记录ip：{} 的dns记录已清除！ √√√", proxyDomain, ip);
+    }
+
+    @Override
+    public String getIpInfo(String ipAddress, String geoIpAuth) {
+        StringBuilder sb = new StringBuilder();
+
+        String curlCommand;
+        // 不使用GeoIP2
+        if ("".equals(geoIpAuth)) {
+            curlCommand = String.format(GET_IP_LOCATION_API, ipAddress);
+        } else {
+            curlCommand = String.format(GET_GEO_IP_LOCATION_API, ipAddress, geoIpAuth);
+        }
+
+        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+        try {
+            Process process = processBuilder.start();
+            // Read the output of the command
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    sb.append(line);
+                }
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return sb.toString();
+    }
+
+    @Override
+    public List<String> getProxyIpFromZip(String zipUrl, List<Integer> ports) {
+        if (StrUtil.isBlank(zipUrl)) {
+            return new ArrayList<>();
+        }
+
+        String downloadPath = null;
+        File unzip = null;
+        try {
+            // 设置下载路径
+            downloadPath = System.getProperty("user.dir") + "/ip.zip";
+            // 发送GET请求并下载文件
+            HttpUtil.downloadFile(zipUrl, downloadPath);
+
+            unzip = ZipUtil.unzip(downloadPath);
+            return Arrays.stream(Objects.requireNonNull(unzip.listFiles())).parallel()
+                    .filter(file -> ports.contains(Integer.valueOf(file.getName().split("\\.")[0].split("-")[2])))
+                    .map(FileUtil::readUtf8Lines)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error("获取URL{}压缩包文件内容失败", zipUrl);
+        } finally {
+            FileUtil.del(downloadPath);
+            FileUtil.del(unzip);
+        }
+        return null;
     }
 }

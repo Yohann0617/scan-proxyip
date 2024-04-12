@@ -1,9 +1,9 @@
 package com.proxyip.select.business.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.proxyip.select.common.bean.ProxyIp;
 import com.proxyip.select.common.service.IProxyIpService;
-import com.proxyip.select.common.utils.CommonUtils;
 import com.proxyip.select.business.IPingValueBusiness;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +29,6 @@ public class PingValueBusinessImpl implements IPingValueBusiness {
     @Override
     public List<ProxyIp> getIpWithPingValueList() {
         return new ArrayList<>(Optional.ofNullable(proxyIpService.list(new LambdaQueryWrapper<ProxyIp>().isNotNull(ProxyIp::getPingValue)))
-                .filter(CommonUtils::isNotEmpty).orElseGet(Collections::emptyList));
+                .filter(CollectionUtil::isNotEmpty).orElseGet(Collections::emptyList));
     }
 }

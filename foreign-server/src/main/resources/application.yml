@@ -41,6 +41,9 @@ dns-cfg:
     - 45.64.23.25
     - 38.180.30.217
     - 192.95.21.234
+  zip-url: https://zip.baipiao.eu.org
+  zip-ports:
+    - 443
 
 # cloudflare配置
 cloudflare-cfg:

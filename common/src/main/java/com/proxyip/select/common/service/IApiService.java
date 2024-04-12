@@ -74,4 +74,22 @@ public interface IApiService {
      * @param apiToken    apiToken
      */
     void removeCfSingleDnsRecords(String proxyDomain, String ip, String zoneId, String apiToken);
+
+    /**
+     * 获取ip信息（Geoip2）（更精准）（有限额：一天1000次查询）
+     *
+     * @param ipAddress ip地址
+     * @param geoIpAuth geoIpAuth
+     * @return 国家代码（例如：香港-HK）
+     */
+    String getIpInfo(String ipAddress, String geoIpAuth);
+
+    /**
+     * 从压缩包获取proxyip
+     *
+     * @param zipUrl 压缩包下载url
+     * @param ports  端口列表
+     * @return proxyip列表
+     */
+    List<String> getProxyIpFromZip(String zipUrl, List<Integer> ports);
 }
