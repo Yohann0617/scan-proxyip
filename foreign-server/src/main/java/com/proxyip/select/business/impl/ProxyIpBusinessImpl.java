@@ -99,43 +99,43 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
     public void addDnsRecordsBatch(AddDnsRecordsBatchParams params) {
         Optional.ofNullable(proxyIpService.listByIds(params.getIds()))
                 .filter(CollectionUtil::isNotEmpty).ifPresent(list -> {
-            list.parallelStream().forEach(proxyIp -> {
-                String prefix = proxyIp.getCountry().toLowerCase(Locale.ROOT) + "." + cloudflareCfg.getProxyDomainPrefix();
-                apiService.addCfDnsRecords(
-                        prefix,
-                        proxyIp.getIp(),
-                        cloudflareCfg.getZoneId(),
-                        cloudflareCfg.getApiToken());
-            });
-        });
+                    list.parallelStream().forEach(proxyIp -> {
+                        String prefix = proxyIp.getCountry().toLowerCase(Locale.ROOT) + "." + cloudflareCfg.getProxyDomainPrefix();
+                        apiService.addCfDnsRecords(
+                                prefix,
+                                proxyIp.getIp(),
+                                cloudflareCfg.getZoneId(),
+                                cloudflareCfg.getApiToken());
+                    });
+                });
     }
 
     @Override
     public void addProxyIpToDbBatch(AddProxyIpToDbParams params) {
         Optional.ofNullable(params.getIpList())
                 .filter(CollectionUtil::isNotEmpty).ifPresent(ipList -> {
-            List<ProxyIp> list = ipList.parallelStream()
-                    .map(String::trim)
-                    .filter(ip -> CollectionUtil.isEmpty(proxyIpService.list(new LambdaQueryWrapper<ProxyIp>().eq(ProxyIp::getIp, ip))))
-                    .map(ip -> {
-                        // 获取国家代码
-                        String countryCode = apiService.getIpCountry(ip, dnsCfg.getGeoipAuth());
-                        if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
-                            countryCode = apiService.getIpCountry(ip);
-                        }
+                    List<ProxyIp> list = ipList.parallelStream()
+                            .map(String::trim)
+                            .filter(ip -> CollectionUtil.isEmpty(proxyIpService.list(new LambdaQueryWrapper<ProxyIp>().eq(ProxyIp::getIp, ip))))
+                            .map(ip -> {
+                                // 获取国家代码
+                                String countryCode = apiService.getIpCountry(ip, dnsCfg.getGeoipAuth());
+                                if (countryCode == null || EnumUtils.getEnumByCode(CountryEnum.class, countryCode) == null) {
+                                    countryCode = apiService.getIpCountry(ip);
+                                }
 
-                        ProxyIp proxyIp = new ProxyIp();
-                        proxyIp.setId(String.valueOf(idGen.nextId()));
-                        proxyIp.setCountry(countryCode);
-                        proxyIp.setIp(ip);
-                        Integer pingValue = NetUtils.getPingValue(ip);
-                        proxyIp.setPingValue(pingValue == null ? 999999 : pingValue);
-                        proxyIp.setCreateTime(LocalDateTime.now());
-                        return proxyIp;
-                    })
-                    .collect(Collectors.toList());
-            proxyIpService.saveBatch(list);
-        });
+                                ProxyIp proxyIp = new ProxyIp();
+                                proxyIp.setId(String.valueOf(idGen.nextId()));
+                                proxyIp.setCountry(countryCode);
+                                proxyIp.setIp(ip);
+                                Integer pingValue = NetUtils.getPingValue(ip);
+                                proxyIp.setPingValue(pingValue == null ? 999999 : pingValue);
+                                proxyIp.setCreateTime(LocalDateTime.now());
+                                return proxyIp;
+                            })
+                            .collect(Collectors.toList());
+                    proxyIpService.saveBatch(list);
+                });
     }
 
     @Override
