@@ -122,6 +122,7 @@
               style="margin-top: 15px;"
               @focus="handleFocus"
               @input="search">
+
         <el-select v-model="pageParams.keyword"
                    slot="prepend" placeholder="请选择代理域名"
                    style="width: 150px" @change="search">
@@ -137,8 +138,15 @@
                       style="margin-top: 15px;"
                       class="input-with-select">
                 <el-select v-model="proxyDomain" slot="prepend" placeholder="请选择代理域名" style="width: 150px">
-                    <el-option v-for="country in countryList" :key="country.first" :label="country.first"
-                               :value="country.third"></el-option>
+                    <el-option label="美国" value="us"></el-option>
+                    <el-option label="英国" value="gb"></el-option>
+                    <el-option label="荷兰" value="nl"></el-option>
+                    <el-option label="德国" value="de"></el-option>
+                    <el-option label="香港" value="hk"></el-option>
+                    <el-option label="澳门" value="mo"></el-option>
+                    <el-option label="新加坡" value="sg"></el-option>
+                    <el-option label="韩国" value="kr"></el-option>
+                    <el-option label="日本" value="jp"></el-option>
                 </el-select>
                 <el-button slot="append" icon="el-icon-delete" round @click="deleteDnsRecord"></el-button>
             </el-input>
@@ -147,8 +155,15 @@
                       style="margin-top: 15px;"
                       class="input-with-select" @clear="handleClear">
                 <el-select v-model="rmRecordIpProxyDomain" slot="prepend" placeholder="请选择代理域名" style="width: 150px">
-                    <el-option v-for="country in countryList" :key="country.first" :label="country.first"
-                               :value="country.third"></el-option>
+                    <el-option label="美国" value="us"></el-option>
+                    <el-option label="英国" value="gb"></el-option>
+                    <el-option label="荷兰" value="nl"></el-option>
+                    <el-option label="德国" value="de"></el-option>
+                    <el-option label="香港" value="hk"></el-option>
+                    <el-option label="澳门" value="mo"></el-option>
+                    <el-option label="新加坡" value="sg"></el-option>
+                    <el-option label="韩国" value="kr"></el-option>
+                    <el-option label="日本" value="jp"></el-option>
                 </el-select>
                 <el-button slot="append" icon="el-icon-delete" round @click="rmSingleIpDnsRecord"></el-button>
             </el-input>
@@ -486,7 +501,6 @@
         },
         mounted() {
             this.search();
-            this.getCountryList();
         }
     });
 
