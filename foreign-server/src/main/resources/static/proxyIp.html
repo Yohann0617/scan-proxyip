@@ -122,7 +122,9 @@
               style="margin-top: 15px;"
               @focus="handleFocus"
               @input="search">
-        <el-select v-model="pageParams.keyword" slot="prepend" placeholder="请选择代理域名" style="width: 150px">
+        <el-select v-model="pageParams.keyword"
+                   slot="prepend" placeholder="请选择代理域名"
+                   style="width: 150px" @change="search">
             <el-option v-for="country in countryList" :key="country.first" :label="country.first"
                        :value="country.third"></el-option>
         </el-select>
@@ -143,7 +145,7 @@
             <el-input clearable placeholder="输入需要删除DNS记录的代理域名中的某条记录的ip地址，如：1.1.1.1"
                       v-model="rmRecordIp"
                       style="margin-top: 15px;"
-                      class="input-with-select">
+                      class="input-with-select" @clear="handleClear">
                 <el-select v-model="rmRecordIpProxyDomain" slot="prepend" placeholder="请选择代理域名" style="width: 150px">
                     <el-option v-for="country in countryList" :key="country.first" :label="country.first"
                                :value="country.third"></el-option>
@@ -207,13 +209,7 @@
                     <el-tag type="success" effect="plain">{{ scope.row.ip }}</el-tag>
                 </template>
             </el-table-column>
-<!--            filters="filterList"-->
-<!--            :filter-method="filterTag"-->
-<!--            filter-placement="bottom-end"-->
-            <el-table-column prop="country"
-                             label="Country"
-                             width="200" sortable
-            >
+            <el-table-column prop="country" label="Country" width="200" sortable>
                 <template slot-scope="scope">
                     <el-tag type="success" effect="light">{{ scope.row.country }}</el-tag>
                 </template>
@@ -272,7 +268,7 @@
         el: '#app',
         data() {
             return {
-                apiUrl: 'https://kxswmnt.yohann.dedyn.io/api',
+                apiUrl: window.location.href + '/api',
                 pageParams: {
                     keyword: '',
                     currentPage: 1,
@@ -289,8 +285,7 @@
                 rmRecordIp: '',
                 rmRecordIpProxyDomain: '',
                 ipInfoParams: '',
-                countryList: [],
-                filterList: []
+                countryList: []
             };
         },
         methods: {
@@ -331,10 +326,6 @@
                 axios.post(`${this.apiUrl}/proxyIp/getCountryList`, {})
                     .then(response => {
                         this.countryList = response.data.data;
-                        // let formattedData = response.data.data.map(tuple => {
-                        //     return { text: tuple.first, value: tuple.second };
-                        // });
-                        // console.log(formattedData);
                     })
                     .catch(error => console.error('Error searching data:', error));
             },
@@ -486,16 +477,11 @@
             handleFocus() {
                 this.pageParams.currentPage = 1;
                 this.search();
-            }
-            , clearFilter() {
-                this.$refs.filterTable.clearFilter();
             },
-            filterTag(value, row) {
-                return row.country === value;
-            },
-            filterHandler(value, row, column) {
-                const property = column['property'];
-                return row[property] === value;
+            handleClear() {
+                this.pageParams.keyword = '';
+                this.proxyDomain = '';
+                this.rmRecordIpProxyDomain = '';
             }
         },
         mounted() {

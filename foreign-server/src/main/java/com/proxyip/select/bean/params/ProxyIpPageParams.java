@@ -2,6 +2,8 @@ package com.proxyip.select.bean.params;
 
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * @projectName: scan-proxyip
  * @package: com.proxyip.select.bean.params
