@@ -5,9 +5,11 @@ import com.proxyip.select.bean.params.*;
 import com.proxyip.select.common.bean.ResponseData;
 import com.proxyip.select.common.bean.ProxyIp;
 import com.proxyip.select.business.IProxyIpBusiness;
+import com.proxyip.select.common.bean.Tuple3;
 import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * @projectName: scan-proxyip
@@ -68,5 +70,15 @@ public class ProxyIpController {
     public ResponseData<Void> addProxyIpToDbBatch(@RequestBody AddProxyIpToDbParams params) {
         proxyIpBusiness.addProxyIpToDbBatch(params);
         return ResponseData.successData("添加多个proxyIp到数据库成功");
+    }
+
+    @PostMapping(path = "/getIpInfo")
+    public ResponseData<String> getIpInfo(@RequestBody GetIpInfoParams params) {
+        return ResponseData.successData(proxyIpBusiness.getIpInfo(params), "获取IP信息成功");
+    }
+
+    @PostMapping(path = "/getCountryList")
+    public ResponseData<List<Tuple3<String, String, String>>> getCountryList() {
+        return ResponseData.successData(proxyIpBusiness.getCountryList(), "获取国家列表成功");
     }
 }

@@ -1,5 +1,6 @@
 package com.proxyip.select.business.impl;
 
+import cn.hutool.core.collection.CollectionUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -7,23 +8,20 @@ import com.proxyip.select.bean.params.*;
 import com.proxyip.select.business.IDnsRecordBusiness;
 import com.proxyip.select.common.bean.ProxyIp;
 import com.proxyip.select.business.IProxyIpBusiness;
+import com.proxyip.select.common.bean.Tuple3;
 import com.proxyip.select.common.enums.EnumUtils;
 import com.proxyip.select.common.enums.dict.CountryEnum;
 import com.proxyip.select.common.service.IApiService;
 import com.proxyip.select.common.service.IProxyIpService;
-import com.proxyip.select.common.utils.CommonUtils;
 import com.proxyip.select.common.utils.IdGen;
 import com.proxyip.select.common.utils.NetUtils;
 import com.proxyip.select.config.CloudflareCfg;
 import com.proxyip.select.config.DnsCfg;
-import org.springframework.cglib.core.Local;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -83,8 +81,7 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
     @Override
     public void addSingleDnsRecord(AddSingleDnsRecordParams params) {
         Optional.ofNullable(proxyIpService.getById(params.getId())).ifPresent(proxyIp -> {
-            String prefix = EnumUtils.getEnumByCode(CountryEnum.class, proxyIp.getCountry()).getLowCode() + "."
-                    + cloudflareCfg.getProxyDomainPrefix();
+            String prefix = proxyIp.getCountry().toLowerCase(Locale.ROOT) + "." + cloudflareCfg.getProxyDomainPrefix();
             apiService.addCfDnsRecords(
                     prefix,
                     proxyIp.getIp(),
@@ -101,10 +98,9 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
     @Override
     public void addDnsRecordsBatch(AddDnsRecordsBatchParams params) {
         Optional.ofNullable(proxyIpService.listByIds(params.getIds()))
-                .filter(CommonUtils::isNotEmpty).ifPresent(list -> {
+                .filter(CollectionUtil::isNotEmpty).ifPresent(list -> {
             list.parallelStream().forEach(proxyIp -> {
-                String prefix = EnumUtils.getEnumByCode(CountryEnum.class, proxyIp.getCountry()).getLowCode() + "."
-                        + cloudflareCfg.getProxyDomainPrefix();
+                String prefix = proxyIp.getCountry().toLowerCase(Locale.ROOT) + "." + cloudflareCfg.getProxyDomainPrefix();
                 apiService.addCfDnsRecords(
                         prefix,
                         proxyIp.getIp(),
@@ -117,9 +113,10 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
     @Override
     public void addProxyIpToDbBatch(AddProxyIpToDbParams params) {
         Optional.ofNullable(params.getIpList())
-                .filter(CommonUtils::isNotEmpty).ifPresent(ipList -> {
+                .filter(CollectionUtil::isNotEmpty).ifPresent(ipList -> {
             List<ProxyIp> list = ipList.parallelStream()
                     .map(String::trim)
+                    .filter(ip -> CollectionUtil.isEmpty(proxyIpService.list(new LambdaQueryWrapper<ProxyIp>().eq(ProxyIp::getIp, ip))))
                     .map(ip -> {
                         // 获取国家代码
                         String countryCode = apiService.getIpCountry(ip, dnsCfg.getGeoipAuth());
@@ -135,10 +132,21 @@ public class ProxyIpBusinessImpl implements IProxyIpBusiness {
                         proxyIp.setPingValue(pingValue == null ? 999999 : pingValue);
                         proxyIp.setCreateTime(LocalDateTime.now());
                         return proxyIp;
-                    }).collect(Collectors.toList());
-            list.removeIf(x -> Optional.ofNullable(proxyIpService.getOne(new LambdaQueryWrapper<ProxyIp>()
-                    .eq(ProxyIp::getIp, x.getIp()))).isPresent());
+                    })
+                    .collect(Collectors.toList());
             proxyIpService.saveBatch(list);
         });
+    }
+
+    @Override
+    public String getIpInfo(GetIpInfoParams params) {
+        return apiService.getIpInfo(params.getIp(), "");
+    }
+
+    @Override
+    public List<Tuple3<String, String, String>> getCountryList() {
+        return Arrays.stream(CountryEnum.values())
+                .map(x -> Tuple3.of(x.getDesc(), x.getCode(), x.getLowCode()))
+                .collect(Collectors.toList());
     }
 }

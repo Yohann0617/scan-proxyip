@@ -1,5 +1,7 @@
 package com.proxyip.select.business;
 
+import com.proxyip.select.common.bean.Tuple3;
+
 import java.util.List;
 
 /**

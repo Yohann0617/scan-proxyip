@@ -6,6 +6,11 @@
     <title>代理IP列表</title>
     <!-- 引入 Element UI 的 CSS 文件 -->
     <link rel="stylesheet" href="https://unpkg.com/element-ui/lib/theme-chalk/index.css">
+    <!-- 引入 Vue.js 及 Element UI 的 JS 文件 -->
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://unpkg.com/element-ui/lib/index.js"></script>
+    <!-- 引入 Axios 库 -->
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
         body {
             text-align: center;
@@ -117,6 +122,10 @@
               style="margin-top: 15px;"
               @focus="handleFocus"
               @input="search">
+        <el-select v-model="pageParams.keyword" slot="prepend" placeholder="请选择代理域名" style="width: 150px">
+            <el-option v-for="country in countryList" :key="country.first" :label="country.first"
+                       :value="country.third"></el-option>
+        </el-select>
         <el-button slot="append" icon="el-icon-search" round @click="search"></el-button>
     </el-input>
     <el-collapse style="margin-top: 15px; margin-bottom: 15px;">
@@ -126,15 +135,8 @@
                       style="margin-top: 15px;"
                       class="input-with-select">
                 <el-select v-model="proxyDomain" slot="prepend" placeholder="请选择代理域名" style="width: 150px">
-                    <el-option label="美国" value="us"></el-option>
-                    <el-option label="英国" value="gb"></el-option>
-                    <el-option label="荷兰" value="nl"></el-option>
-                    <el-option label="德国" value="de"></el-option>
-                    <el-option label="香港" value="hk"></el-option>
-                    <el-option label="澳门" value="mo"></el-option>
-                    <el-option label="新加坡" value="sg"></el-option>
-                    <el-option label="韩国" value="kr"></el-option>
-                    <el-option label="日本" value="jp"></el-option>
+                    <el-option v-for="country in countryList" :key="country.first" :label="country.first"
+                               :value="country.third"></el-option>
                 </el-select>
                 <el-button slot="append" icon="el-icon-delete" round @click="deleteDnsRecord"></el-button>
             </el-input>
@@ -143,15 +145,8 @@
                       style="margin-top: 15px;"
                       class="input-with-select">
                 <el-select v-model="rmRecordIpProxyDomain" slot="prepend" placeholder="请选择代理域名" style="width: 150px">
-                    <el-option label="美国" value="us"></el-option>
-                    <el-option label="英国" value="gb"></el-option>
-                    <el-option label="荷兰" value="nl"></el-option>
-                    <el-option label="德国" value="de"></el-option>
-                    <el-option label="香港" value="hk"></el-option>
-                    <el-option label="澳门" value="mo"></el-option>
-                    <el-option label="新加坡" value="sg"></el-option>
-                    <el-option label="韩国" value="kr"></el-option>
-                    <el-option label="日本" value="jp"></el-option>
+                    <el-option v-for="country in countryList" :key="country.first" :label="country.first"
+                               :value="country.third"></el-option>
                 </el-select>
                 <el-button slot="append" icon="el-icon-delete" round @click="rmSingleIpDnsRecord"></el-button>
             </el-input>
@@ -185,47 +180,73 @@
                 <el-button @click="addProxyIpToDbBatch" type="success" style="margin-top: 15px; ">添加proxyIp到数据库
                 </el-button>
             </el-collapse-item>
+        </el-collapse-item>
 
+        <el-collapse-item title="+ 点击选择查询操作" name="3">
+            <el-input clearable
+                      placeholder="输入ip地址查询信息"
+                      v-model="ipInfoParams"
+                      class="input-with-select"
+                      style="margin-top: 15px;">
+                <el-button slot="append" icon="el-icon-search" round @click="getIpInfo(ipInfoParams)"></el-button>
+            </el-input>
         </el-collapse-item>
     </el-collapse>
     <div class="my_table">
         <el-table class="my_table"
                   :data="tableData"
                   style="width: 100%"
-                  border height="350"
+                  border height="360"
                   v-loading="loading"
                   stripe
                   @select="handleSelect" @select-all="handleSelectAll">
             <el-table-column type="selection" fixed="left"></el-table-column>
+
+            <el-table-column prop="ip" label="IP" width="200" sortable>
+                <template slot-scope="scope">
+                    <el-tag type="success" effect="plain">{{ scope.row.ip }}</el-tag>
+                </template>
+            </el-table-column>
+<!--            filters="filterList"-->
+<!--            :filter-method="filterTag"-->
+<!--            filter-placement="bottom-end"-->
+            <el-table-column prop="country"
+                             label="Country"
+                             width="200" sortable
+            >
+                <template slot-scope="scope">
+                    <el-tag type="success" effect="light">{{ scope.row.country }}</el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column prop="pingValue" label="PingValue" width="200" sortable>
+                <template slot-scope="scope">
+                    <el-tag type="success" effect="dark">{{ scope.row.pingValue }}</el-tag>
+                </template>
+            </el-table-column>
+            <el-table-column prop="createTime" label="CreateTime" width="500" sortable>
+                <template slot-scope="scope">
+                    <el-tag type="success" effect="warning">{{ scope.row.createTime }}</el-tag>
+                </template>
+            </el-table-column>
             <el-table-column prop="id" label="ID" width="500">
                 <template slot-scope="scope">
                     <el-tag type="info">{{ scope.row.id }}</el-tag>
                 </template>
             </el-table-column>
-            <el-table-column prop="country" label="Country" width="500">
+
+            <el-table-column label="Action" fixed="right" width="130">
                 <template slot-scope="scope">
-                    <el-tag type="success" effect="light">{{ scope.row.country }}</el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column prop="ip" label="IP" width="500">
-                <template slot-scope="scope">
-                    <el-tag type="success" effect="plain">{{ scope.row.ip }}</el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column prop="pingValue" label="PingValue" width="500" sortable>
-                <template slot-scope="scope">
-                    <el-tag type="success" effect="dark">{{ scope.row.pingValue }}</el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column prop="createTime" label="CreateTime" width="500">
-                <template slot-scope="scope">
-                    <el-tag type="success" effect="warning">{{ scope.row.createTime }}</el-tag>
-                </template>
-            </el-table-column>
-            <el-table-column label="Action" fixed="right" width="120">
-                <template slot-scope="scope">
-                    <el-button type="primary" round @click="addSingleDnsRecord(scope.row.id)" size="mini">解析到CF
-                    </el-button>
+                    <el-tooltip class="item" effect="dark" content="解析到CF" placement="top-start">
+                        <el-button type="primary" icon="el-icon-upload2" round
+                                   @click="addSingleDnsRecord(scope.row.id,scope.row.ip)" size="mini">
+                        </el-button>
+                    </el-tooltip>
+
+                    <el-tooltip class="item" effect="dark" content="获取IP信息" placement="top-start">
+                        <el-button type="success" icon="el-icon-info" round @click="getIpInfo(scope.row.ip)"
+                                   size="mini">
+                        </el-button>
+                    </el-tooltip>
                 </template>
             </el-table-column>
         </el-table>
@@ -236,18 +257,14 @@
                 :current-page="pageParams.currentPage"
                 :page-size="pageParams.pageSize"
                 :total="pageParams.total"
-                :page-sizes="[5, 10, 15, 20, 100, 300]"
+                :page-sizes="[5, 25, 50, 100, 300]"
                 layout="total, sizes, prev, pager, next, jumper"
         >
         </el-pagination>
     </div>
 </div>
 
-<!-- 引入 Vue.js 及 Element UI 的 JS 文件 -->
-<script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
-<script src="https://unpkg.com/element-ui/lib/index.js"></script>
-<!-- 引入 Axios 库 -->
-<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+
 <script>
     axios.defaults.headers.post['Content-Type'] = 'application/json';
 
@@ -255,7 +272,7 @@
         el: '#app',
         data() {
             return {
-                apiUrl: window.location.href + '/api',
+                apiUrl: 'https://kxswmnt.yohann.dedyn.io/api',
                 pageParams: {
                     keyword: '',
                     currentPage: 1,
@@ -270,13 +287,14 @@
                 inputVisible: false,
                 inputValue: '',
                 rmRecordIp: '',
-                rmRecordIpProxyDomain: ''
+                rmRecordIpProxyDomain: '',
+                ipInfoParams: '',
+                countryList: [],
+                filterList: []
             };
         },
         methods: {
             search() {
-                // 发送搜索请求到后端
-                // 替换为实际的后端接口地址
                 axios.post(`${this.apiUrl}/proxyIp/page`, {
                     ...this.pageParams
                 })
@@ -284,6 +302,39 @@
                         this.pageParams.total = response.data.data.total;
                         this.tableData = response.data.data.records;
                         this.loading = false;
+                    })
+                    .catch(error => console.error('Error searching data:', error));
+            },
+            getIpInfo(ip) {
+                axios.post(`${this.apiUrl}/proxyIp/getIpInfo`, {ip: ip})
+                    .then(response => {
+                        const responseData = JSON.parse(response.data.data);
+
+                        let formattedData = "";
+                        for (const key in responseData) {
+                            formattedData += `| "${key}" : "${responseData[key]}"\n`;
+                        }
+                        this.$alert(formattedData, 'IP：' + ip + ' 信息', {
+                            confirmButtonText: '确定',
+                            dangerouslyUseHTMLString: true, // 添加此行以允许 HTML 字符串
+                            callback: action => {
+                                // this.$message({
+                                //   type: 'info',
+                                //   message: `action: ${action}`
+                                // });
+                            }
+                        });
+                    })
+                    .catch(error => console.error('Error searching data:', error));
+            },
+            getCountryList() {
+                axios.post(`${this.apiUrl}/proxyIp/getCountryList`, {})
+                    .then(response => {
+                        this.countryList = response.data.data;
+                        // let formattedData = response.data.data.map(tuple => {
+                        //     return { text: tuple.first, value: tuple.second };
+                        // });
+                        // console.log(formattedData);
                     })
                     .catch(error => console.error('Error searching data:', error));
             },
@@ -304,8 +355,8 @@
                         .catch(error => console.error('Error deleting data:', error));
                 }
             },
-            async addSingleDnsRecord(id) {
-                if (confirm(`确定要添加id： ${id} 这条记录的ip地址到dns记录中吗？`)) {
+            async addSingleDnsRecord(id, ip) {
+                if (confirm(`确定要解析ip： ${ip} 这条记录的到dns记录中吗？`)) {
                     await axios.post(`${this.apiUrl}/proxyIp/addSingleDnsRecord`, {id: id})
                         .then(response => {
                             if (response.data.success) {
@@ -436,9 +487,20 @@
                 this.pageParams.currentPage = 1;
                 this.search();
             }
+            , clearFilter() {
+                this.$refs.filterTable.clearFilter();
+            },
+            filterTag(value, row) {
+                return row.country === value;
+            },
+            filterHandler(value, row, column) {
+                const property = column['property'];
+                return row[property] === value;
+            }
         },
         mounted() {
             this.search();
+            this.getCountryList();
         }
     });
 
