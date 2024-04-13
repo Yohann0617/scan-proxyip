@@ -123,8 +123,8 @@
               @focus="handleFocus"
               @input="search">
         <el-select v-model="pageParams.keyword"
-                   slot="prepend" placeholder="请选择代理域名"
-                   style="width: 150px" @change="search">
+                   slot="prepend" placeholder="请选择国家"
+                   style="width: 120px" @change="search">
             <el-option v-for="country in countryList" :key="country.first" :label="country.first"
                        :value="country.third"></el-option>
         </el-select>
