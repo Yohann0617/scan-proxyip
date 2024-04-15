@@ -2,9 +2,12 @@ package com.proxyip.select.common.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.ZipUtil;
 import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.proxyip.select.common.exception.BusinessException;
 import com.proxyip.select.common.service.IApiService;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +67,9 @@ public class ApiServiceImpl implements IApiService {
     /**
      * 获取ip归属国家api
      */
-    private static String GET_IP_LOCATION_API = "curl \"https://api.iplocation.net/?cmd=ip-country&ip=%s\"";
+    private static String GET_IP_LOCATION_API1 = "curl \"https://api.iplocation.net/?cmd=ip-country&ip=%s\"";
+    private static String GET_IP_LOCATION_API2 = "curl -H \"User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36\" " +
+            "-H \"Accept: application/json\" \"https://api.ip.sb/geoip/%s\"";
     private static String GET_GEO_IP_LOCATION_API = "curl \"https://geolite.info/geoip/v2.1/country/%s\"" +
             " -H \"Authorization: Basic %s\"";
 
@@ -133,33 +138,31 @@ public class ApiServiceImpl implements IApiService {
 
     @Override
     public String getIpCountry(String ipAddress) {
-        String curlCommand = String.format(GET_IP_LOCATION_API, ipAddress);
+        String curlCommand = String.format(GET_IP_LOCATION_API2, ipAddress);
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
-        String country = null;
+        StringBuilder sb = new StringBuilder();
         try {
             Process process = processBuilder.start();
             // Read the output of the command
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    if (line.contains("country_code2")) {
-                        int index = line.indexOf("country_code2");
-                        country = line.substring(index + 16, index + 18).trim();
-                        break;
-                    }
+                    sb.append(line);
                 }
+            }
+            String jsonStr = sb.toString();
+            if (StrUtil.isNotBlank(jsonStr)) {
+                JSONObject entries = JSONUtil.parseObj(jsonStr);
+                return ObjectUtil.isNull(entries) ? null : entries.get("country_code", String.class);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        return country;
+        return null;
     }
 
     @Override
     public String getIpCountry(String ipAddress, String geoIpAuth) {
-        String country = null;
-
         // 不使用GeoIP2
         if ("".equals(geoIpAuth)) {
             return getIpCountry(ipAddress);
@@ -167,24 +170,26 @@ public class ApiServiceImpl implements IApiService {
 
         String curlCommand = String.format(GET_GEO_IP_LOCATION_API, ipAddress, geoIpAuth);
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+        StringBuilder sb = new StringBuilder();
         try {
             Process process = processBuilder.start();
             // Read the output of the command
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    if (line.contains("\"iso_code\"")) {
-                        int index = line.indexOf("\"iso_code\"");
-                        country = line.substring(index + 12, index + 14);
-                        break;
-                    }
+                    sb.append(line);
                 }
+            }
+            String jsonStr = sb.toString();
+            if (StrUtil.isNotBlank(jsonStr)) {
+                JSONObject entries = JSONUtil.parseObj(jsonStr);
+                return ObjectUtil.isNull(entries) ? null : entries.get("iso_code", String.class);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return country;
+        return null;
     }
 
     @Override
@@ -270,7 +275,7 @@ public class ApiServiceImpl implements IApiService {
         String curlCommand;
         // 不使用GeoIP2
         if ("".equals(geoIpAuth)) {
-            curlCommand = String.format(GET_IP_LOCATION_API, ipAddress);
+            curlCommand = String.format(GET_IP_LOCATION_API2, ipAddress);
         } else {
             curlCommand = String.format(GET_GEO_IP_LOCATION_API, ipAddress, geoIpAuth);
         }
