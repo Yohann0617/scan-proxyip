@@ -223,7 +223,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
         if (CollectionUtil.isNotEmpty(voidIdList)) {
             proxyIpService.removeByIds(voidIdList);
         }
-        log.info("√√√ 清除数据库中无效ip任务已完成 √√√");
+        log.info("√√√ 清除数据库中无效ip任务已完成，共清理{}个无效ip √√√", voidIdList.size());
     }
 
     @Override

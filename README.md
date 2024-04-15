@@ -57,6 +57,13 @@ Create the `application.yml` configuration file in the same directory as the jar
 ```bash
 nohup jar -jar select-1.0.0.jar > /var/log/scan-proxyip.log &
 ```
+## API interface
+
+### 1. Query the country where the IP belongs
+
+```bash
+curl -X POST "Your URL/api/proxyIp/getIpInfo" -H "Content-Type: application/json" --data '{"ip":"1.1.1.1"}'
+```
 
 ## Stargazers over time
 

@@ -58,6 +58,16 @@ jar包同级目录下创建`application.yml`配置文件并修改相关配置，
 nohup jar -jar select-1.0.0.jar > /var/log/scan-proxyip.log &
 ```
 
+## API接口
+
+### 1、查询IP归属国家
+
+```bash
+curl -X POST "你的URL/api/proxyIp/getIpInfo" -H "Content-Type: application/json" --data '{"ip":"1.1.1.1"}'
+```
+
+
+
 ## Stargazers over time
 
 [![Stargazers over time](https://starchart.cc/Yohann0617/scan-proxyip.svg)](https://starchart.cc/Yohann0617/scan-proxyip)
