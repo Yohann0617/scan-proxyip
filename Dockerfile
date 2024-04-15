@@ -10,7 +10,7 @@ COPY . .
 
 # 执行Maven构建并将构建的jar文件复制到指定目录
 RUN mvn clean package -DskipTests \
-    && cp foreign-server/target/foreign-server-1.0.4.jar /app/foreign-server.jar
+    && cp foreign-server/target/foreign-server-1.0.5.jar /app/foreign-server.jar
 
 # 支持AMD、ARM两种架构的镜像
 FROM dragonwell-registry.cn-hangzhou.cr.aliyuncs.com/dragonwell/dragonwell:8-centos
