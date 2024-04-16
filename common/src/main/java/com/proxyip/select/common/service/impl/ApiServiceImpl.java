@@ -138,31 +138,32 @@ public class ApiServiceImpl implements IApiService {
 
     @Override
     public String getIpCountry(String ipAddress) {
-        String curlCommand = String.format(GET_IP_LOCATION_API2, ipAddress);
+        String curlCommand = String.format(GET_IP_LOCATION_API1, ipAddress);
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
-        StringBuilder sb = new StringBuilder();
+        String country = null;
         try {
             Process process = processBuilder.start();
             // Read the output of the command
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    sb.append(line);
+                    if (line.contains("country_code2")) {
+                        int index = line.indexOf("country_code2");
+                        country = line.substring(index + 16, index + 18).trim();
+                        break;
+                    }
                 }
-            }
-            String jsonStr = sb.toString();
-            if (StrUtil.isNotBlank(jsonStr)) {
-                JSONObject entries = JSONUtil.parseObj(jsonStr);
-                return ObjectUtil.isNull(entries) ? null : entries.get("country_code", String.class);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
-        return null;
+        return country;
     }
 
     @Override
     public String getIpCountry(String ipAddress, String geoIpAuth) {
+        String country = null;
+
         // 不使用GeoIP2
         if ("".equals(geoIpAuth)) {
             return getIpCountry(ipAddress);
@@ -170,26 +171,24 @@ public class ApiServiceImpl implements IApiService {
 
         String curlCommand = String.format(GET_GEO_IP_LOCATION_API, ipAddress, geoIpAuth);
         ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
-        StringBuilder sb = new StringBuilder();
         try {
             Process process = processBuilder.start();
             // Read the output of the command
             try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
                 String line;
                 while ((line = reader.readLine()) != null) {
-                    sb.append(line);
+                    if (line.contains("\"iso_code\"")) {
+                        int index = line.indexOf("\"iso_code\"");
+                        country = line.substring(index + 12, index + 14);
+                        break;
+                    }
                 }
-            }
-            String jsonStr = sb.toString();
-            if (StrUtil.isNotBlank(jsonStr)) {
-                JSONObject entries = JSONUtil.parseObj(jsonStr);
-                return ObjectUtil.isNull(entries) ? null : entries.get("iso_code", String.class);
             }
         } catch (Exception e) {
             e.printStackTrace();
         }
 
-        return null;
+        return country;
     }
 
     @Override

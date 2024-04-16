@@ -14,13 +14,16 @@ import java.io.InputStreamReader;
 public class CommonTest {
     public static void main(String[] args) {
         String jsonStr = getIpInfo("141.147.101.8", "");
-
+        System.out.println(jsonStr);
         JSONObject obj = JSONUtil.parseObj(jsonStr);
-        System.out.println(obj.get("country_code", String.class));
+        System.out.println(obj.get("country_code", String.class) == null ? "kong" : obj.get("country_code", String.class));
+
+        System.out.println(jsonStr.substring(jsonStr.indexOf("country_code") + 15, jsonStr.indexOf("country_code") + 17));
     }
 
     private static String GET_IP_LOCATION_API2 = "curl -H \"User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36\" " +
             "-H \"Accept: application/json\" \"https://api.ip.sb/geoip/%s\"";
+    private static String GET_IP_LOCATION_API1 = "curl \"https://api.iplocation.net/?cmd=ip-country&ip=%s\"";
 
     public static String getIpInfo(String ipAddress, String geoIpAuth) {
         StringBuilder sb = new StringBuilder();
