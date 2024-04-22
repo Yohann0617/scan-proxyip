@@ -13,12 +13,11 @@ RUN mvn clean package -DskipTests \
     && cp foreign-server/target/foreign-server-1.0.5.jar /app/foreign-server.jar
 
 # 支持AMD、ARM两种架构的镜像
-FROM dragonwell-registry.cn-hangzhou.cr.aliyuncs.com/dragonwell/dragonwell:8-centos
+FROM ubuntu:latest
 
 # 安装依赖包
-RUN yum install -y bind-utils curl epel-release \
-    && yum install -y jq \
-    && yum clean all \
+RUN apt update && apt install -y dnsutils curl jq openjdk-8-jre \
+    && apt-get clean \
     && ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo Asia/Shanghai > /etc/timezone \
     && mkdir -p /app/ && touch /app/scan.db
 
