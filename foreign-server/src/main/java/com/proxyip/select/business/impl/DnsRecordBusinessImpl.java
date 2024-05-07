@@ -1,8 +1,14 @@
 package com.proxyip.select.business.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
+import cn.hutool.core.lang.Validator;
+import cn.hutool.core.text.csv.CsvData;
+import cn.hutool.core.text.csv.CsvReader;
+import cn.hutool.core.util.CharsetUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.proxyip.select.common.bean.ProxyIp;
+import com.proxyip.select.common.exception.BusinessException;
 import com.proxyip.select.common.service.IApiService;
 import com.proxyip.select.common.service.IProxyIpService;
 import com.proxyip.select.common.utils.IdGen;
@@ -16,6 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -93,9 +100,9 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                                     subList.sort(Comparator.comparing(ProxyIp::getPingValue));
                                     if (subList.size() < 5) {
                                         subList.addAll(Optional.ofNullable(proxyIpService.list(new LambdaQueryWrapper<ProxyIp>()
-                                                .eq(ProxyIp::getCountry, subList.get(0).getCountry())
-                                                .orderByAsc(ProxyIp::getPingValue)
-                                                .last("limit " + (5 - subList.size()))))
+                                                        .eq(ProxyIp::getCountry, subList.get(0).getCountry())
+                                                        .orderByAsc(ProxyIp::getPingValue)
+                                                        .last("limit " + (5 - subList.size()))))
                                                 .filter(CollectionUtil::isNotEmpty).orElseGet(Collections::emptyList).stream()
                                                 .filter(x -> !subList.contains(x))
                                                 .collect(Collectors.toList()));
@@ -122,12 +129,12 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                 .flatMap(List::stream)
                 .collect(Collectors.toList())
                 .parallelStream().forEach(x -> {
-            if (countryCodeList.contains(x.getCountry())) {
-                String prefix =
-                        EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
-                apiService.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
-            }
-        });
+                    if (countryCodeList.contains(x.getCountry())) {
+                        String prefix =
+                                EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
+                        apiService.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+                    }
+                });
         log.info("√√√ 所有DNS记录添加完成!!! √√√");
 
         // 写入文件
@@ -235,6 +242,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
         List<String> proxyIpsFromDomain = apiService.resolveDomain(dnsCfg.getProxyDomain(), dnsCfg.getDnsServer());
         proxyIpsFromDomain.addAll(proxyIpsFromZip);
         Set<String> set = new HashSet<>(proxyIpsFromDomain);
+        set.addAll(getProxyIpFromCsv());
 
         if (set.size() != 0) {
             // 清除dns旧记录
@@ -269,6 +277,34 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
             proxyIpService.updateBatchById(proxyIpList);
         }
         log.info("√√√ 更新数据库中ip的ping值任务已完成 √√√");
+    }
+
+    @Override
+    public List<String> getProxyIpFromCsv() {
+        if (StrUtil.isBlank(dnsCfg.getCsvDir())) {
+            return new ArrayList<>();
+        }
+
+        File csvDir = new File(dnsCfg.getCsvDir());
+        if (!csvDir.exists() || !csvDir.isDirectory()) {
+            throw new BusinessException(-1, "目录：" + dnsCfg.getCsvDir() + " 不存在");
+        }
+        return Arrays.stream(Objects.requireNonNull(csvDir.listFiles()))
+                .filter(file -> file.getName().contains(".csv"))
+                .map(file -> {
+                    try (CsvReader reader = new CsvReader()) {
+                        CsvData data = reader.read(file, CharsetUtil.CHARSET_UTF_8);
+                        return data.getRows().stream()
+                                .map(row -> row.getRawList().get(0))
+                                .filter(Validator::isIpv4)
+                                .collect(Collectors.toList());
+                    } catch (IOException e) {
+                        log.error("读取文件：{} 内容失败", file.getName(), e);
+                        throw new RuntimeException(e);
+                    }
+                })
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
     }
 
     /**

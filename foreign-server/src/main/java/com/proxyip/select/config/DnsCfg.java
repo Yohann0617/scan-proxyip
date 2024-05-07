@@ -27,6 +27,7 @@ public class DnsCfg {
     private String outPutFile;
     private String uploadApi;
     private List<String> releaseIps;
+    private String csvDir;
     private String zipUrl;
     private List<Integer> zipPorts;
 }

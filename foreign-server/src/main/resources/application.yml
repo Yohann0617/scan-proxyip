@@ -41,6 +41,8 @@ dns-cfg:
     - 45.64.23.25
     - 38.180.30.217
     - 192.95.21.234
+  # 如果docker运行需要挂载该目录，该目录是扫描proxyip并生成.csv文件的目录
+  csv-dir: /root/ipscan/asscan_linux_amd64/
   zip-url: https://zip.baipiao.eu.org
   zip-ports:
     - 443

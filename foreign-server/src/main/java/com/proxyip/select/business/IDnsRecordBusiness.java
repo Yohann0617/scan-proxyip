@@ -55,4 +55,11 @@ public interface IDnsRecordBusiness {
      * 更新数据库中ip的ping值
      */
     void updateIpPingValueInDb();
+
+    /**
+     * 从.csv文件获取proxyip
+     *
+     * @return ip列表
+     */
+    List<String> getProxyIpFromCsv();
 }
