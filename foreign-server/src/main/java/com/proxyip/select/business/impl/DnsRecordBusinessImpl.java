@@ -84,7 +84,9 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                     proxyIp.setPingValue(pingValue == null ? 999999 : pingValue);
                     proxyIp.setCreateTime(LocalDateTime.now());
                     return proxyIp;
-                }).collect(Collectors.toList());
+                })
+                .filter(x -> StrUtil.isNotBlank(x.getCountry()))
+                .collect(Collectors.toList());
 
         // 持久化到数据库
         proxyIpService.saveBatch(list);
@@ -100,9 +102,9 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                                     subList.sort(Comparator.comparing(ProxyIp::getPingValue));
                                     if (subList.size() < 5) {
                                         subList.addAll(Optional.ofNullable(proxyIpService.list(new LambdaQueryWrapper<ProxyIp>()
-                                                        .eq(ProxyIp::getCountry, subList.get(0).getCountry())
-                                                        .orderByAsc(ProxyIp::getPingValue)
-                                                        .last("limit " + (5 - subList.size()))))
+                                                .eq(ProxyIp::getCountry, subList.get(0).getCountry())
+                                                .orderByAsc(ProxyIp::getPingValue)
+                                                .last("limit " + (5 - subList.size()))))
                                                 .filter(CollectionUtil::isNotEmpty).orElseGet(Collections::emptyList).stream()
                                                 .filter(x -> !subList.contains(x))
                                                 .collect(Collectors.toList()));
@@ -129,12 +131,12 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                 .flatMap(List::stream)
                 .collect(Collectors.toList())
                 .parallelStream().forEach(x -> {
-                    if (countryCodeList.contains(x.getCountry())) {
-                        String prefix =
-                                EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
-                        apiService.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
-                    }
-                });
+            if (countryCodeList.contains(x.getCountry())) {
+                String prefix =
+                        EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
+                apiService.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+            }
+        });
         log.info("√√√ 所有DNS记录添加完成!!! √√√");
 
         // 写入文件
