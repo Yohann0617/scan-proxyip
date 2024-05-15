@@ -92,14 +92,16 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
         proxyIpService.saveBatch(list);
 
         // 分组并保留五条记录
-        Map<String, List<ProxyIp>> ipGroupByCountryMap = list.parallelStream()
+        Map<String, List<ProxyIp>> ipGroupByCountryMap = Optional.ofNullable(
+                proxyIpService.list(new LambdaQueryWrapper<ProxyIp>().orderByAsc(ProxyIp::getPingValue)))
+                .filter(CollectionUtil::isNotEmpty).orElseGet(Collections::emptyList).parallelStream()
+                .filter(proxyIp -> countryCodeList.contains(proxyIp.getCountry()))
+                .filter(this::ipFilterByCountryCode).collect(Collectors.toList()).parallelStream()
                 .collect(Collectors.groupingBy(
                         ProxyIp::getCountry,
                         Collectors.collectingAndThen(
                                 Collectors.toList(),
                                 subList -> {
-                                    // 根据ping值排序
-                                    subList.sort(Comparator.comparing(ProxyIp::getPingValue));
                                     if (subList.size() < 5) {
                                         subList.addAll(Optional.ofNullable(proxyIpService.list(new LambdaQueryWrapper<ProxyIp>()
                                                 .eq(ProxyIp::getCountry, subList.get(0).getCountry())
@@ -114,17 +116,17 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                         )));
 
         // 没有解析到的国家便使用数据库中的proxyIp
-        countryCodeList.parallelStream().forEach(countryCode -> {
-            if (!ipGroupByCountryMap.containsKey(countryCode)) {
-                List<ProxyIp> proxyIpList = proxyIpService.list(new LambdaQueryWrapper<ProxyIp>()
-                        .eq(ProxyIp::getCountry, countryCode)
-                        .orderByAsc(ProxyIp::getPingValue)
-                        .last("limit 5"));
-                if (CollectionUtil.isNotEmpty(proxyIpList)) {
-                    ipGroupByCountryMap.put(countryCode, proxyIpList);
-                }
-            }
-        });
+//        countryCodeList.parallelStream().forEach(countryCode -> {
+//            if (!ipGroupByCountryMap.containsKey(countryCode)) {
+//                List<ProxyIp> proxyIpList = proxyIpService.list(new LambdaQueryWrapper<ProxyIp>()
+//                        .eq(ProxyIp::getCountry, countryCode)
+//                        .orderByAsc(ProxyIp::getPingValue)
+//                        .last("limit 5"));
+//                if (CollectionUtil.isNotEmpty(proxyIpList)) {
+//                    ipGroupByCountryMap.put(countryCode, proxyIpList);
+//                }
+//            }
+//        });
 
         // 添加cf记录
         ipGroupByCountryMap.values().stream()
@@ -307,6 +309,20 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                 })
                 .flatMap(Collection::stream)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public boolean ipFilterByCountryCode(ProxyIp proxyIp) {
+        CountryEnum enumByCode = EnumUtils.getEnumByCode(CountryEnum.class, proxyIp.getCountry());
+        switch (enumByCode) {
+            // proxyip特殊处理，这些ip段的ip好一点
+            case NL:
+                return StrUtil.startWith(proxyIp.getIp(), "146.70.");
+            case HK:
+                return StrUtil.startWith(proxyIp.getIp(), "8.210.");
+            default:
+                return true;
+        }
     }
 
     /**

@@ -1,5 +1,6 @@
 package com.proxyip.select.business;
 
+import com.proxyip.select.common.bean.ProxyIp;
 import com.proxyip.select.common.bean.Tuple3;
 
 import java.util.List;
@@ -62,4 +63,12 @@ public interface IDnsRecordBusiness {
      * @return ip列表
      */
     List<String> getProxyIpFromCsv();
+
+    /**
+     * proxyip筛选特殊处理
+     *
+     * @param proxyIp 代理ip
+     * @return 布尔值
+     */
+    boolean ipFilterByCountryCode(ProxyIp proxyIp);
 }
