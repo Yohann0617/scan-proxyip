@@ -115,19 +115,6 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                                 }
                         )));
 
-        // 没有解析到的国家便使用数据库中的proxyIp
-//        countryCodeList.parallelStream().forEach(countryCode -> {
-//            if (!ipGroupByCountryMap.containsKey(countryCode)) {
-//                List<ProxyIp> proxyIpList = proxyIpService.list(new LambdaQueryWrapper<ProxyIp>()
-//                        .eq(ProxyIp::getCountry, countryCode)
-//                        .orderByAsc(ProxyIp::getPingValue)
-//                        .last("limit 5"));
-//                if (CollectionUtil.isNotEmpty(proxyIpList)) {
-//                    ipGroupByCountryMap.put(countryCode, proxyIpList);
-//                }
-//            }
-//        });
-
         // 添加cf记录
         ipGroupByCountryMap.values().stream()
                 .flatMap(List::stream)
@@ -316,6 +303,10 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
         CountryEnum enumByCode = EnumUtils.getEnumByCode(CountryEnum.class, proxyIp.getCountry());
         switch (enumByCode) {
             // proxyip特殊处理，这些ip段的ip好一点
+            case US:
+                return StrUtil.startWith(proxyIp.getIp(), "38.180.") || StrUtil.startWith(proxyIp.getIp(), "20.");
+            case GB:
+                return StrUtil.startWith(proxyIp.getIp(), "38.180.");
             case NL:
                 return StrUtil.startWith(proxyIp.getIp(), "146.70.");
             case HK:
