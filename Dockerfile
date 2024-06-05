@@ -16,7 +16,7 @@ RUN mvn clean package -DskipTests \
 FROM openjdk:8-jdk-alpine
 
 # 安装依赖包
-RUN RUN apk update \
+RUN apk update \
     && apk add bind-tools curl jq \
     && ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && echo Asia/Shanghai > /etc/timezone \
     && mkdir -p /app/ && touch /app/scan.db
