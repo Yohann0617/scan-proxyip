@@ -34,6 +34,7 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ApiServiceImpl implements IApiService {
 
+    private static final String COMMAND_PREFIX = "sh";
     /**
      * cf添加dns记录api
      */
@@ -81,7 +82,7 @@ public class ApiServiceImpl implements IApiService {
     @Override
     public void uploadFileToNetDisc(String filePath, String apiAddress) {
         String curlCommand = String.format(NET_DISC_API, filePath, apiAddress);
-        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+        ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
         try {
             Process process = processBuilder.start();
             // Read the output of the command
@@ -139,7 +140,7 @@ public class ApiServiceImpl implements IApiService {
     @Override
     public String getIpCountry(String ipAddress) {
         String curlCommand = String.format(GET_IP_LOCATION_API1, ipAddress);
-        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+        ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
         String country = null;
         try {
             Process process = processBuilder.start();
@@ -170,7 +171,7 @@ public class ApiServiceImpl implements IApiService {
         }
 
         String curlCommand = String.format(GET_GEO_IP_LOCATION_API, ipAddress, geoIpAuth);
-        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+        ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
         try {
             Process process = processBuilder.start();
             // Read the output of the command
@@ -194,7 +195,7 @@ public class ApiServiceImpl implements IApiService {
     @Override
     public void addCfDnsRecords(String domainPrefix, String ipAddress, String zoneId, String apiToken) {
         String curlCommand = String.format(CF_ADD_DNS_RECORDS_API, zoneId, apiToken, domainPrefix, ipAddress);
-        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+        ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
         try {
             Process process = processBuilder.start();
 
@@ -223,7 +224,7 @@ public class ApiServiceImpl implements IApiService {
     public void removeCfDnsRecords(List<String> proxyDomainList, String zoneId, String apiToken) {
         proxyDomainList.parallelStream().forEach(proxyDomain -> {
             String curlCommand = String.format(CF_REMOVE_DNS_RECORDS_API, zoneId, proxyDomain, apiToken, zoneId, apiToken);
-            ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+            ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
             try {
                 Process process = processBuilder.start();
                 // Wait for the process to finish
@@ -252,7 +253,7 @@ public class ApiServiceImpl implements IApiService {
     @Override
     public void removeCfSingleDnsRecords(String proxyDomain, String ip, String zoneId, String apiToken) {
         String curlCommand = String.format(CF_REMOVE_SINGLE_DNS_RECORDS_API, zoneId, proxyDomain, apiToken, ip, zoneId, apiToken);
-        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+        ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
         try {
             Process process = processBuilder.start();
             // Wait for the process to finish
@@ -279,7 +280,7 @@ public class ApiServiceImpl implements IApiService {
             curlCommand = String.format(GET_GEO_IP_LOCATION_API, ipAddress, geoIpAuth);
         }
 
-        ProcessBuilder processBuilder = new ProcessBuilder("bash", "-c", curlCommand);
+        ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
         try {
             Process process = processBuilder.start();
             // Read the output of the command
