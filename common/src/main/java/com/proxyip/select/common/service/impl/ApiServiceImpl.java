@@ -5,7 +5,10 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.ZipUtil;
+import cn.hutool.http.HttpRequest;
+import cn.hutool.http.HttpResponse;
 import cn.hutool.http.HttpUtil;
+import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONObject;
 import cn.hutool.json.JSONUtil;
 import com.proxyip.select.common.exception.BusinessException;
@@ -223,30 +226,27 @@ public class ApiServiceImpl implements IApiService {
     @Override
     public void removeCfDnsRecords(List<String> proxyDomainList, String zoneId, String apiToken) {
         proxyDomainList.parallelStream().forEach(proxyDomain -> {
-            String curlCommand = String.format(CF_REMOVE_DNS_RECORDS_API, zoneId, proxyDomain, apiToken, zoneId, apiToken);
-            ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
-            try {
-                Process process = processBuilder.start();
-                // Wait for the process to finish
-                int exitCode = process.waitFor();
-                if (exitCode != 0) {
-                    log.error("Error executing removeCfDnsRecords task");
+            String url = "https://api.cloudflare.com/client/v4/zones/" + zoneId + "/dns_records?type=A&name=" + proxyDomain;
+            HttpRequest request = HttpRequest.get(url)
+                    .header("Authorization", "Bearer " + apiToken)
+                    .header("Content-Type", "application/json");
+            HttpResponse response = request.execute();
+            String responseBody = response.body();
+            JSONArray recordsArray = JSONUtil.parseArray(JSONUtil.parseObj(responseBody).get("result"));
+            for (int i = 0; i < recordsArray.size(); i++) {
+                String id = JSONUtil.parseObj(recordsArray.get(i)).getStr("id");
+                // 删除 DNS 记录
+                String deleteUrl = "https://api.cloudflare.com/client/v4/zones/" + zoneId + "/dns_records/" + id;
+                HttpRequest deleteRequest = HttpRequest.delete(deleteUrl)
+                        .header("Authorization", "Bearer " + apiToken)
+                        .header("Content-Type", "application/json");
+                HttpResponse deleteResponse = deleteRequest.execute();
+                // 等待删除命令执行完毕
+                if (deleteResponse.getStatus() != 200) {
+                    log.error("Error executing delete command");
                 }
-//                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-//                    String line;
-//                    log.info("rm ------------------" + proxyDomain + "-------------------");
-//                    while ((line = reader.readLine()) != null) {
-//                        log.info(line);
-//                    }
-//                    log.info("rm ------------------" + proxyDomain + "-------------------");
-//                } catch (Exception e) {
-//                    e.printStackTrace();
-//                }
-            } catch (IOException | InterruptedException e) {
-                e.printStackTrace();
-                throw new BusinessException(-1, "清除DNS记录失败：" + e.getLocalizedMessage());
             }
-            log.info("√√√ 域名：{} 的dns记录已清除！ √√√", proxyDomain);
+            log.info("√√√ 域名：" + proxyDomain + " 的dns记录已清除！ √√√");
         });
     }
 
