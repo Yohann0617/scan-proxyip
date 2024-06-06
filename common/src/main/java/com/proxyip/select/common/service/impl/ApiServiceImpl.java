@@ -2,7 +2,9 @@ package com.proxyip.select.common.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.io.FileUtil;
+import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.util.ObjectUtil;
+import cn.hutool.core.util.RuntimeUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.ZipUtil;
 import cn.hutool.http.HttpRequest;
@@ -37,69 +39,33 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ApiServiceImpl implements IApiService {
 
-    private static final String COMMAND_PREFIX = "sh";
-    /**
-     * cf添加dns记录api
-     */
-    private static final String CF_ADD_DNS_RECORDS_API = "curl -X POST \"https://api.cloudflare.com/client/v4/zones/%s/dns_records\"" +
-            "     -H \"Authorization: Bearer %s\" " +
-            "     -H \"Content-Type: application/json\" " +
-            "     --data '{\"type\":\"A\",\"name\":\"%s\",\"content\":\"%s\",\"proxied\":false}'";
-
-    /**
-     * cf删除所有dns记录api
-     */
-    private static String CF_REMOVE_DNS_RECORDS_API = "curl -X GET \"https://api.cloudflare.com/client/v4/zones/%s/dns_records?type=A&name=%s\" " +
-            "     -H \"Authorization: Bearer %s\" " +
-            "     -H \"Content-Type: application/json\" | " +
-            "jq -c '.result[] | .id' | " +
-            "xargs -n 1 -I {} curl -X DELETE \"https://api.cloudflare.com/client/v4/zones/%s/dns_records/{}\" " +
-            "     -H \"Authorization: Bearer %s\" " +
-            "     -H \"Content-Type: application/json\"";
-
-    /**
-     * cf删除指定代理域名的某个ip地址的dns记录api
-     */
-    private static String CF_REMOVE_SINGLE_DNS_RECORDS_API = "curl -X GET \"https://api.cloudflare" +
-            ".com/client/v4/zones/%s/dns_records?type=A&name=%s\" " +
-            "-H \"Authorization: Bearer %s\" " +
-            "-H \"Content-Type: application/json\" | jq -c '.result[] | select(.content == \"%s\") | .id' | xargs -n 1 -I {} curl -X DELETE " +
-            "\"https://api.cloudflare.com/client/v4/zones/%s/dns_records/{}\" " +
-            "-H \"Authorization: Bearer %s\" " +
-            "-H \"Content-Type: application/json\"";
-
     /**
      * 获取ip归属国家api
      */
-    private static String GET_IP_LOCATION_API1 = "curl \"https://api.iplocation.net/?cmd=ip-country&ip=%s\"";
-    private static String GET_IP_LOCATION_API2 = "curl -H \"User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36\" " +
-            "-H \"Accept: application/json\" \"https://api.ip.sb/geoip/%s\"";
-    private static String GET_GEO_IP_LOCATION_API = "curl \"https://geolite.info/geoip/v2.1/country/%s\"" +
-            " -H \"Authorization: Basic %s\"";
-
-    /**
-     * 个人网盘api
-     */
-    private static String NET_DISC_API = "curl -X POST -F \"image=@%s;type=application/octet-stream\" %s";
+    private static final String GET_IP_LOCATION_API1 = "https://api.iplocation.net/?cmd=ip-country&ip=%s";
+    private static final String GET_IP_LOCATION_API2 = "https://ipapi.co/%s/json";
+    private static final String GET_GEO_IP_LOCATION_API = "https://geolite.info/geoip/v2.1/country/%s";
 
     @Override
     public void uploadFileToNetDisc(String filePath, String apiAddress) {
-        String curlCommand = String.format(NET_DISC_API, filePath, apiAddress);
-        ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
-        try {
-            Process process = processBuilder.start();
-            // Read the output of the command
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    if (line.contains("\"code\":1")) {
-                        log.info("√√√ 文件：{} 已发送至个人网盘 √√√", filePath);
-                        break;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
+        File file = new File(filePath);
+
+        if (!file.exists()) {
+            log.error("文件 {} 不存在", filePath);
+            return;
+        }
+
+        // 发送POST请求上传文件
+        HttpResponse response = HttpRequest.post(apiAddress)
+                .form("image", file)
+                .execute();
+
+        // 读取响应
+        String responseBody = response.body();
+        if (responseBody.contains("\"code\":1")) {
+            log.info("√√√ 文件：{} 已发送至个人网盘 √√√", filePath);
+        } else {
+            log.error("文件：{} 发送失败，响应信息：{}", filePath, responseBody);
         }
     }
 
@@ -110,30 +76,19 @@ public class ApiServiceImpl implements IApiService {
         }
 
         Set<String> ipAddresses = new HashSet<>();
-        domainList.stream().parallel().forEach(domain -> {
-            ProcessBuilder processBuilder = new ProcessBuilder("nslookup", domain, dnsServer);
-
+        domainList.parallelStream().forEach(domain -> {
+            String command = String.format("nslookup %s %s", domain, dnsServer);
             try {
-                Process process = processBuilder.start();
-                // Read the output of the command
-                try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                    String line;
-                    while ((line = reader.readLine()) != null) {
-                        if (line.startsWith("Address:") && !line.contains("#")) {
-                            String ipAddress = line.substring(line.indexOf(":") + 1).trim();
-                            ipAddresses.add(ipAddress);
-                        }
+                List<String> results = RuntimeUtil.execForLines(command);
+
+                for (String line : results) {
+                    if (line.startsWith("Address:") && !line.contains("#")) {
+                        String ipAddress = line.substring(line.indexOf(":") + 1).trim();
+                        ipAddresses.add(ipAddress);
                     }
                 }
-
-                // Wait for the process to finish
-                int exitCode = process.waitFor();
-                if (exitCode != 0) {
-                    log.error("Error executing nslookup command");
-//                    System.exit(1);
-                }
             } catch (Exception e) {
-                e.printStackTrace();
+                log.error("Error executing nslookup command", e);
             }
         });
 
@@ -142,85 +97,54 @@ public class ApiServiceImpl implements IApiService {
 
     @Override
     public String getIpCountry(String ipAddress) {
-        String curlCommand = String.format(GET_IP_LOCATION_API1, ipAddress);
-        ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
-        String country = null;
-        try {
-            Process process = processBuilder.start();
-            // Read the output of the command
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    if (line.contains("country_code2")) {
-                        int index = line.indexOf("country_code2");
-                        country = line.substring(index + 16, index + 18).trim();
-                        break;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        return country;
+        String url = String.format(GET_IP_LOCATION_API1, ipAddress);
+        HttpResponse response = HttpRequest.get(url).execute();
+        // 将字符串解析为JSONObject
+        JSONObject jsonObject = JSONUtil.parseObj(response.body());
+        // 获取country_code2
+        return jsonObject.getStr("country_code2");
     }
 
     @Override
     public String getIpCountry(String ipAddress, String geoIpAuth) {
-        String country = null;
-
         // 不使用GeoIP2
         if ("".equals(geoIpAuth)) {
             return getIpCountry(ipAddress);
         }
 
-        String curlCommand = String.format(GET_GEO_IP_LOCATION_API, ipAddress, geoIpAuth);
-        ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
-        try {
-            Process process = processBuilder.start();
-            // Read the output of the command
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    if (line.contains("\"iso_code\"")) {
-                        int index = line.indexOf("\"iso_code\"");
-                        country = line.substring(index + 12, index + 14);
-                        break;
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        String url = String.format(GET_GEO_IP_LOCATION_API, ipAddress);
 
-        return country;
+        HttpResponse response = HttpRequest.get(url)
+                .header("Authorization", "Basic " + geoIpAuth)
+                .execute();
+
+        // 将字符串解析为JSONObject
+        JSONObject jsonObject = JSONUtil.parseObj(response.body());
+
+        // 获取country对象中的iso_code
+        return jsonObject.getByPath("country.iso_code", String.class);
     }
 
     @Override
     public void addCfDnsRecords(String domainPrefix, String ipAddress, String zoneId, String apiToken) {
-        String curlCommand = String.format(CF_ADD_DNS_RECORDS_API, zoneId, apiToken, domainPrefix, ipAddress);
-        ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
-        try {
-            Process process = processBuilder.start();
+        String url = String.format("https://api.cloudflare.com/client/v4/zones/%s/dns_records", zoneId);
 
-//        try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-//            String line;
-//            log.info("add ------------------" + domainPrefix + "-------------------");
-//            while ((line = reader.readLine()) != null) {
-//                log.info(line);
-//            }
-//            log.info("add ------------------" + domainPrefix + "-------------------");
-//        }
+        // 构建请求体
+        JSONObject data = new JSONObject();
+        data.put("type", "A");
+        data.put("name", domainPrefix);
+        data.put("content", ipAddress);
+        data.put("proxied", false);
 
-            // Wait for the process to finish
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                log.error("Error executing addCfDnsRecords task");
-            }
-//        log.info("域名：" + domainPrefix + "." + dnsCfg.getRootDomain() + " 的dns记录添加成功！ip地址：" + ipAddress);
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new BusinessException(-1, "添加cf记录失败：" + e.getLocalizedMessage());
-        }
+        // 发送POST请求
+        HttpResponse response = HttpRequest.post(url)
+                .header("Authorization", "Bearer " + apiToken)
+                .header("Content-Type", "application/json")
+                .body(data.toString())
+                .execute();
+
+        // 返回响应结果
+//        log.info(response.body());
     }
 
     @Override
@@ -252,49 +176,47 @@ public class ApiServiceImpl implements IApiService {
 
     @Override
     public void removeCfSingleDnsRecords(String proxyDomain, String ip, String zoneId, String apiToken) {
-        String curlCommand = String.format(CF_REMOVE_SINGLE_DNS_RECORDS_API, zoneId, proxyDomain, apiToken, ip, zoneId, apiToken);
-        ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
-        try {
-            Process process = processBuilder.start();
-            // Wait for the process to finish
-            int exitCode = process.waitFor();
-            if (exitCode != 0) {
-                log.error("Error executing removeCfSingleDnsRecords task");
+        String url = "https://api.cloudflare.com/client/v4/zones/" + zoneId + "/dns_records?type=A&name=" + proxyDomain;
+        HttpRequest request = HttpRequest.get(url)
+                .header("Authorization", "Bearer " + apiToken)
+                .header("Content-Type", "application/json");
+        HttpResponse response = request.execute();
+        String responseBody = response.body();
+        JSONArray recordsArray = JSONUtil.parseArray(JSONUtil.parseObj(responseBody).get("result"));
+        for (int i = 0; i < recordsArray.size(); i++) {
+            String address = JSONUtil.parseObj(recordsArray.get(i)).getStr("content");
+            if (address.equals(ip)) {
+                String id = JSONUtil.parseObj(recordsArray.get(i)).getStr("id");
+                // 删除 DNS 记录
+                String deleteUrl = "https://api.cloudflare.com/client/v4/zones/" + zoneId + "/dns_records/" + id;
+                HttpRequest deleteRequest = HttpRequest.delete(deleteUrl)
+                        .header("Authorization", "Bearer " + apiToken)
+                        .header("Content-Type", "application/json");
+                HttpResponse deleteResponse = deleteRequest.execute();
+                // 等待删除命令执行完毕
+                if (deleteResponse.getStatus() != 200) {
+                    log.error("Error executing delete command");
+                }
+                break;
             }
-        } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
-            throw new BusinessException(-1, "清除DNS记录失败：" + e.getLocalizedMessage());
         }
         log.info("√√√ 域名：{} 的A记录ip：{} 的dns记录已清除！ √√√", proxyDomain, ip);
     }
 
     @Override
     public String getIpInfo(String ipAddress, String geoIpAuth) {
-        StringBuilder sb = new StringBuilder();
-
-        String curlCommand;
         // 不使用GeoIP2
         if ("".equals(geoIpAuth)) {
-            curlCommand = String.format(GET_IP_LOCATION_API2, ipAddress);
+            String url = String.format(GET_IP_LOCATION_API2, ipAddress);
+            HttpResponse response = HttpRequest.get(url).execute();
+            return response.body();
         } else {
-            curlCommand = String.format(GET_GEO_IP_LOCATION_API, ipAddress, geoIpAuth);
+            String url = String.format(GET_GEO_IP_LOCATION_API, ipAddress);
+            HttpResponse response = HttpRequest.get(url)
+                    .header("Authorization", "Basic " + geoIpAuth)
+                    .execute();
+            return response.body();
         }
-
-        ProcessBuilder processBuilder = new ProcessBuilder(COMMAND_PREFIX, "-c", curlCommand);
-        try {
-            Process process = processBuilder.start();
-            // Read the output of the command
-            try (BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()))) {
-                String line;
-                while ((line = reader.readLine()) != null) {
-                    sb.append(line);
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        return sb.toString();
     }
 
     @Override
