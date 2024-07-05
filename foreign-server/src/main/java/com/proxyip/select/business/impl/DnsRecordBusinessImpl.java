@@ -93,7 +93,7 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
 
         // 分组并保留五条记录
         Map<String, List<ProxyIp>> ipGroupByCountryMap = Optional.ofNullable(
-                proxyIpService.list(new LambdaQueryWrapper<ProxyIp>().orderByAsc(ProxyIp::getPingValue)))
+                        proxyIpService.list(new LambdaQueryWrapper<ProxyIp>().orderByAsc(ProxyIp::getPingValue)))
                 .filter(CollectionUtil::isNotEmpty).orElseGet(Collections::emptyList).parallelStream()
                 .filter(proxyIp -> countryCodeList.contains(proxyIp.getCountry()))
                 .filter(this::ipFilterByCountryCode).collect(Collectors.toList()).parallelStream()
@@ -104,9 +104,9 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                                 subList -> {
                                     if (subList.size() < 5) {
                                         subList.addAll(Optional.ofNullable(proxyIpService.list(new LambdaQueryWrapper<ProxyIp>()
-                                                .eq(ProxyIp::getCountry, subList.get(0).getCountry())
-                                                .orderByAsc(ProxyIp::getPingValue)
-                                                .last("limit " + (5 - subList.size()))))
+                                                        .eq(ProxyIp::getCountry, subList.get(0).getCountry())
+                                                        .orderByAsc(ProxyIp::getPingValue)
+                                                        .last("limit " + (5 - subList.size()))))
                                                 .filter(CollectionUtil::isNotEmpty).orElseGet(Collections::emptyList).stream()
                                                 .filter(x -> !subList.contains(x))
                                                 .collect(Collectors.toList()));
@@ -120,12 +120,12 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                 .flatMap(List::stream)
                 .collect(Collectors.toList())
                 .parallelStream().forEach(x -> {
-            if (countryCodeList.contains(x.getCountry())) {
-                String prefix =
-                        EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
-                apiService.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
-            }
-        });
+                    if (countryCodeList.contains(x.getCountry())) {
+                        String prefix =
+                                EnumUtils.getEnumByCode(CountryEnum.class, x.getCountry()).getLowCode() + "." + cloudflareCfg.getProxyDomainPrefix();
+                        apiService.addCfDnsRecords(prefix, x.getIp(), cloudflareCfg.getZoneId(), cloudflareCfg.getApiToken());
+                    }
+                });
         log.info("√√√ 所有DNS记录添加完成!!! √√√");
 
         // 写入文件
@@ -261,7 +261,10 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
                 .filter(CollectionUtil::isNotEmpty).orElseGet(Collections::emptyList).parallelStream()
                 .peek(x -> {
                     Integer pingValue = NetUtils.getPingValue(x.getIp());
-                    x.setPingValue(pingValue == null ? 999999 : pingValue);
+                    if (pingValue == null) {
+                        return;
+                    }
+                    x.setPingValue(pingValue);
                 })
                 .collect(Collectors.toList());
         if (CollectionUtil.isNotEmpty(proxyIpList)) {
