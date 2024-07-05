@@ -306,8 +306,6 @@ public class DnsRecordBusinessImpl implements IDnsRecordBusiness {
         CountryEnum enumByCode = EnumUtils.getEnumByCode(CountryEnum.class, proxyIp.getCountry());
         switch (enumByCode) {
             // proxyip特殊处理，这些ip段的ip好一点
-            case US:
-                return StrUtil.startWith(proxyIp.getIp(), "38.180.") || StrUtil.startWith(proxyIp.getIp(), "20.");
             case GB:
                 return StrUtil.startWith(proxyIp.getIp(), "38.180.");
             case NL:

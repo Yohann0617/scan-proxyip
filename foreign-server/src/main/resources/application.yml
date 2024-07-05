@@ -21,6 +21,7 @@ dns-cfg:
   cron: "0 30 8 * * ?"
   # DNS服务器地址：谷歌：8.8.8.8； OpenDNS：208.67.222.222或208.67.220.220； cloudflare：1.1.1.1
   dns-server: 1.1.1.1
+  # 获取方式一：通过解析别人解析好的域名
   proxy-domain:
     - cdn-all.xn--b6gac.eu.org
     - cdn-all.xijingping.link
@@ -29,6 +30,7 @@ dns-cfg:
   out-put-file: /app/proxyIps.conf
   # 个人网盘api（可以不填）
   upload-api:
+  # 常年稳定的proxyip
   release-ips:
     - 45.64.23.3
     - 45.64.23.4
@@ -41,8 +43,9 @@ dns-cfg:
     - 45.64.23.25
     - 38.180.30.217
     - 192.95.21.234
-  # 如果docker运行需要挂载该目录，该目录是扫描proxyip并生成.csv文件的目录
+  # 获取方式二：通过脚本自己扫描并生成.csv文件。 如果docker运行需要挂载该目录，该目录是扫描proxyip并生成.csv文件的目录
   csv-dir: /root/ipscan/asscan_linux_amd64/
+  # 获取方式三：通过别人提供url直接下载
   zip-url: https://zip.baipiao.eu.org
   zip-ports:
     - 443
