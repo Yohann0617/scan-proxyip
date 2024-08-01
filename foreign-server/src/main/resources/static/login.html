@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Page</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+</head>
+<body>
+<div id="app">
+    <div class="login-container">
+        <form @submit.prevent="login">
+            <h2>Login</h2>
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" v-model="username" id="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" v-model="password" id="password" required>
+            </div>
+            <button type="submit">Login</button>
+        </form>
+    </div>
+</div>
+</body>
+<script>
+    axios.defaults.headers.post['Content-Type'] = 'application/json';
+
+
+    new Vue({
+        el: '#app',
+        data: {
+            username: '',
+            password: '',
+            errorMessage: ''
+        },
+        methods: {
+            async login() {
+                // http://127.0.0.1:8017
+                await axios.post(window.location.href + '/api/session/login', {
+                    username: this.username,
+                    password: this.password
+                })
+                    .then(response => {
+                        if (response.data.success) {
+                            alert(response.data.msg);
+                            localStorage.setItem('token', response.data.data)
+                            window.location.href = '/proxyIp.html'; // Redirect to the URL provided by the server
+                        }
+                    })
+                    .catch(error => console.error('Error deleting data:', error));
+
+            }
+        }
+    });
+</script>
+<style>
+    * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        font-family: 'Arial', sans-serif;
+    }
+
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: #f0f2f5;
+    }
+
+    .login-container {
+        background-color: #fff;
+        padding: 2rem;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        width: 100%;
+        max-width: 400px;
+    }
+
+    .login-form h2 {
+        margin-bottom: 1.5rem;
+        text-align: center;
+        color: #333;
+    }
+
+    .input-group {
+        margin-bottom: 1rem;
+    }
+
+    .input-group label {
+        display: block;
+        margin-bottom: 0.5rem;
+        color: #555;
+    }
+
+    .input-group input {
+        width: 100%;
+        padding: 0.75rem;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        outline: none;
+        transition: border-color 0.3s;
+    }
+
+    .input-group input:focus {
+        border-color: #007bff;
+    }
+
+    button {
+        width: 100%;
+        padding: 0.75rem;
+        background-color: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    button:hover {
+        background-color: #0056b3;
+    }
+</style>
+</html>

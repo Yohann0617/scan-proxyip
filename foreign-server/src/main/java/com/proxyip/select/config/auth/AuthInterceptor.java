@@ -1,11 +1,16 @@
 package com.proxyip.select.config.auth;
 
+import cn.hutool.core.util.StrUtil;
+import com.proxyip.select.common.exception.BusinessException;
+import com.proxyip.select.utils.ExpiringCache;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.ModelAndView;
 
+import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @projectName: scan-proxyip
@@ -16,14 +21,20 @@ import javax.servlet.http.HttpServletResponse;
  */
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
+    @Resource
+    private ExpiringCache<String, String> expiringCache;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 静态资源
-        if (!request.getRequestURI().startsWith("/api")) {
-            return true;
+        if (!request.getRequestURI().contains("/session/login")) {
+            String token = request.getHeader("Authorization");
+            String tokenInCache = expiringCache.get("token");
+            if (StrUtil.isBlank(tokenInCache) || !token.equals(tokenInCache)) {
+                response.sendRedirect("/login.html");
+                return false;
+            }
+            expiringCache.put("token", token, 10, TimeUnit.MINUTES);
         }
-
         return true;
     }
 

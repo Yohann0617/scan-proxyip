@@ -55,6 +55,11 @@ cloudflare-cfg:
   # 优选ip域名前缀
   proxy-domain-prefix:
 
+auth-cfg:
+  username: xxx
+  password: xxx
+  token-secretKey: xxx
+
 snow:
   id:
     worker-id: 0

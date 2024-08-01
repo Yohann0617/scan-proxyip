@@ -24,8 +24,12 @@ public class MyErrorViewResolver implements ErrorViewResolver {
         // Use the request or status to optionally return a ModelAndView
         if (status == HttpStatus.NOT_FOUND ) {
             // We could add custom model values here
-            return new ModelAndView(new InternalResourceView("/proxyIp.html"),model);
+            return new ModelAndView(new InternalResourceView("/login.html"),model);
         }
-        return null;
+//        // 可以根据其他状态码处理其他错误页面
+//        if (status == HttpStatus.UNAUTHORIZED) {
+//            return new ModelAndView(new InternalResourceView("/login.html"), model);
+//        }
+        return new ModelAndView(new InternalResourceView("/proxyIp.html"),model);
     }
 }

@@ -27,7 +27,8 @@ public class CrossDomainFilter extends WebMvcConfigurationSupport {
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         registry.addInterceptor(authInterceptor)
-                .addPathPatterns("/**");
+                .addPathPatterns("/api/**")  // 只拦截 /api/** 路径
+                .excludePathPatterns("/login.html");
     }
 
     @Override

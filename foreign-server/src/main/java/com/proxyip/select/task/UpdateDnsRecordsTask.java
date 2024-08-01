@@ -51,16 +51,16 @@ public class UpdateDnsRecordsTask implements ApplicationRunner {
 
     @Override
     public void run(ApplicationArguments args) {
-        // 校验参数
-        checkCfg();
-
-        if (dnsCfg.getPowerOnExec()) {
-            // 服务启动立马执行一次
-            dnsRecordBusiness.updateProxyIpTask();
-        }
-
-        // 执行定时任务
-        taskScheduler.schedule(dnsRecordBusiness::updateDbTask, new CronTrigger("0 1 0 * * ?"));
-        taskScheduler.schedule(dnsRecordBusiness::updateProxyIpTask, new CronTrigger(dnsCfg.getCron()));
+//        // 校验参数
+//        checkCfg();
+//
+//        if (dnsCfg.getPowerOnExec()) {
+//            // 服务启动立马执行一次
+//            dnsRecordBusiness.updateProxyIpTask();
+//        }
+//
+//        // 执行定时任务
+//        taskScheduler.schedule(dnsRecordBusiness::updateDbTask, new CronTrigger("0 1 0 * * ?"));
+//        taskScheduler.schedule(dnsRecordBusiness::updateProxyIpTask, new CronTrigger(dnsCfg.getCron()));
     }
 }
