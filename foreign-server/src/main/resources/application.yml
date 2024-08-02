@@ -60,6 +60,9 @@ cloudflare-cfg:
   # 优选ip域名前缀
   proxy-domain-prefix:
 
+# token 权限码
+permission-code: xxx
+
 snow:
   id:
     worker-id: 0

@@ -62,7 +62,10 @@ nohup jar -jar select-1.0.0.jar > /var/log/scan-proxyip.log &
 ### 1. Query the country where the IP belongs
 
 ```bash
-curl -X POST "Your URL/api/proxyIp/getIpInfo" -H "Content-Type: application/json" --data '{"ip":"1.1.1.1"}'
+curl -X POST "Your URL/api/proxyIp/getIpInfo" \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer your_token_here" \
+--data '{"ip":"1.1.1.1"}'
 ```
 
 ## Stargazers over time

@@ -63,7 +63,10 @@ nohup jar -jar select-1.0.0.jar > /var/log/scan-proxyip.log &
 ### 1、查询IP归属国家
 
 ```bash
-curl -X POST "你的URL/api/proxyIp/getIpInfo" -H "Content-Type: application/json" --data '{"ip":"1.1.1.1"}'
+curl -X POST "你的URL/api/proxyIp/getIpInfo" \
+-H "Content-Type: application/json" \
+-H "Authorization: Bearer your_token_here" \
+--data '{"ip":"1.1.1.1"}'
 ```
 
 

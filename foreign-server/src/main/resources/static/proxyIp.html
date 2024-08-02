@@ -12,6 +12,17 @@
     <!-- 引入 Axios 库 -->
     <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
     <style>
+        .auth-container {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            /*bottom: 10px;*/
+        }
+
+        .input-with-select {
+            margin-top: 15px;
+        }
+
         body {
             text-align: center;
         }
@@ -115,6 +126,16 @@
 <body>
 <div id="app">
     <h2>代理IP列表</h2>
+    <div class="auth-container">
+        <el-input clearable
+                  placeholder="请输入权限码"
+                  v-model="permissionCode"
+                  class="input-with-select"
+                  style="">
+            <el-button slot="append" icon="el-icon-upload" round @click="auth"></el-button>
+        </el-input>
+    </div>
+
     <el-input clearable
               placeholder="输入国家代号、ip地址进行模糊查询"
               v-model="pageParams.keyword"
@@ -264,11 +285,26 @@
 <script>
     axios.defaults.headers.post['Content-Type'] = 'application/json';
 
+    // 设置请求拦截器
+    axios.interceptors.request.use(
+        config => {
+            const token = sessionStorage.getItem('token');
+            if (token) {
+                config.headers['Authorization'] = `Bearer ${token}`;
+            }
+            return config;
+        },
+        error => {
+            return Promise.reject(error);
+        }
+    );
+
     new Vue({
         el: '#app',
         data() {
             return {
-                apiUrl: window.location.href + '/api',
+                // apiUrl: window.location.href + '/api',
+                apiUrl: 'https://projects.19990617.xyz/proxyipmnt/api',
                 pageParams: {
                     keyword: '',
                     currentPage: 1,
@@ -285,10 +321,16 @@
                 rmRecordIp: '',
                 rmRecordIpProxyDomain: '',
                 ipInfoParams: '',
-                countryList: []
+                countryList: [],
+                permissionCode: ''
             };
         },
         methods: {
+            auth() {
+                sessionStorage.setItem('token', this.permissionCode)
+                alert('设置权限码：' + this.permissionCode + ' 成功')
+                this.search()
+            },
             search() {
                 axios.post(`${this.apiUrl}/proxyIp/page`, {
                     ...this.pageParams
