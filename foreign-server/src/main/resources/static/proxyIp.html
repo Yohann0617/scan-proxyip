@@ -14,6 +14,7 @@
     <style>
         .auth-container {
             position: fixed;
+            z-index: 9999; /* 确保在所有其他组件之上 */
             top: 10px;
             left: 10px;
         }
@@ -127,7 +128,7 @@
     <h2>代理IP列表</h2>
     <div class="auth-container" v-if="!authDivHidden">
         <el-input clearable
-                  placeholder="请输入权限码"
+                  placeholder="请输入权限码！"
                   v-model="permissionCode"
                   class="input-with-select"
                   style="">
