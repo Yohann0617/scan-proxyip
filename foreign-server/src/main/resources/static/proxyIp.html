@@ -125,7 +125,7 @@
 <body>
 <div id="app">
     <h2>代理IP列表</h2>
-    <div class="auth-container">
+    <div class="auth-container" v-if="!authDivHidden">
         <el-input clearable
                   placeholder="请输入权限码"
                   v-model="permissionCode"
@@ -320,13 +320,13 @@
                 rmRecordIpProxyDomain: '',
                 ipInfoParams: '',
                 countryList: [],
-                permissionCode: ''
+                permissionCode: '',
+                authDivHidden: false
             };
         },
         methods: {
             auth() {
                 sessionStorage.setItem('token', this.permissionCode)
-                alert('设置权限码：' + this.permissionCode + ' 成功')
                 this.search()
             },
             search() {
@@ -337,8 +337,16 @@
                         this.pageParams.total = response.data.data.total;
                         this.tableData = response.data.data.records;
                         this.loading = false;
+                        if (response.data.success && this.authDivHidden === false) {
+                            this.authDivHidden = true
+                        }
                     })
-                    .catch(error => console.error('Error searching data:', error));
+                    .catch(error => {
+                        if(error.response && error.response.data && error.response.data.errorCode === 401 && this.permissionCode != ''){
+                            alert('权限码：' + this.permissionCode + ' 无效，请重新输入')
+                        }
+                        console.error('Error searching data:', error)
+                    });
             },
             getIpInfo(ip) {
                 axios.post(`${this.apiUrl}/proxyIp/getIpInfo`, {ip: ip})
