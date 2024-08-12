@@ -329,6 +329,7 @@
             auth() {
                 sessionStorage.setItem('token', this.permissionCode)
                 this.search()
+                this.getCountryList()
             },
             search() {
                 axios.post(`${this.apiUrl}/proxyIp/page`, {
