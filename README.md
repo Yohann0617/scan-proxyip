@@ -1,3 +1,6 @@
+
+</think>
+
 [ZH](https://github.com/Yohann0617/scan-proxyip/blob/master/README_ZH.md) | [EN](https://github.com/Yohann0617/scan-proxyip/blob/master/README.md)
 
 # scan-proxyip
@@ -55,7 +58,7 @@ Create the `application.yml` configuration file in the same directory as the jar
 ### 3. Start the service in the background:
 
 ```bash
-nohup jar -jar select-1.0.0.jar > /var/log/scan-proxyip.log &
+nohup jar -jar select-1.0.6.jar > /var/log/scan-proxyip.log &
 ```
 ## API interface
 
